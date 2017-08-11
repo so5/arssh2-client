@@ -7,6 +7,7 @@
 var app = require('../app');
 var debug = require('debug')('sshproxy:server');
 var http = require('http');
+var path = require('path');
 
 /**
  * Get port from environment and store in Express.
@@ -20,6 +21,30 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+
+/**
+ * create ssh connection
+ */
+//MUST TODO ブラウザの設定画面から入力するように変更
+var conf1=require(path.resolve('conf1.json'));
+var conf2=require(path.resolve('conf2.json'));
+
+var ssh = require(path.resolve('lib/sshProxy'));
+var connection1 = new ssh(conf2);
+//var connection2 = new ssh(conf2);
+
+/**
+ * prepare socket.io
+ */
+var io = require('socket.io')(server);
+io.on('connection', function(socket){
+  socket.on('cmd', function(cmd){
+    connection1.exec(cmd, function(handler, data){
+      io.emit(handler, data);
+    }); 
+  });
+});
+
 
 /**
  * Listen on provided port, on all network interfaces.
