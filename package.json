@@ -3,14 +3,17 @@
   "version": "0.1",
   "description": "ssh2 client wrapper with auto-reconnect feature",
   "author": {
-    "name": Naoyuki Sogo",
+    "name": "Naoyuki Sogo"
   },
   "license": "MIT",
   "main": "lib/index.js",
   "scripts": {
-    "test": "node connectionTest",
+    "test": "node connectionTest"
   },
   "dependencies": {
     "ssh2": "^0.5.5"
+  },
+  "devDependencies": {
+    "eslint": "^4.11.0"
   }
 }
