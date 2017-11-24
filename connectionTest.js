@@ -12,6 +12,26 @@ async function readPrivateKeyFile(keyFile){
   return privateKey.toString();
 }
 
+async function test(config){
+  config.privateKey = `${process.env.HOME}/.ssh/id_rsa`;
+//  config.debug=console.log; // enable DEBUG output from ssh2 
+  let ssh = new sshClient(config);
+  ssh
+    .on('stdout', (data)=>{
+      console.log('stdout:', data);
+    })
+    .on('stderr', (data)=>{
+      console.log('stderr:', data);
+    });
+
+  let rt = await ssh.exec('hostname');
+  console.log('rt of hostname', rt);
+  rt = await ssh.exec('ls hoge');
+  console.log('rt of ls hoge', rt);
+  ssh.disconnect();
+  return rt;
+}
+
 async function main(){
   let data = await util.promisify(fs.readFile)('yasshTestSettings.json')
     .catch((err)=>{
@@ -19,14 +39,7 @@ async function main(){
     });
   let configs = JSON.parse(data);
   configs.forEach((config)=>{
-    config.privateKey = `${process.env.HOME}/.ssh/id_rsa`;
-    ssh = new sshClient(config);
-    setInterval(()=>{
-    ssh.exec('hostname',(stdout, stderr)=>{
-      console.log('stdout:', stdout);
-      console.log('stderr:', stderr);
-    });
-    },2000);
+    test(config);
   });
 }
 
