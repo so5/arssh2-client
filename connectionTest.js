@@ -13,8 +13,9 @@ async function readPrivateKeyFile(keyFile){
 }
 
 async function test(config){
-  config.privateKey = `${process.env.HOME}/.ssh/id_rsa`;
-//  config.debug=console.log; // enable DEBUG output from ssh2 
+  config.privateKey = await readPrivateKeyFile();
+//  config.debug=console.log; // enable DEBUG output from ssh2
+
   let ssh = new sshClient(config);
   ssh
     .on('stdout', (data)=>{
@@ -27,7 +28,7 @@ async function test(config){
   let rt = await ssh.exec('hostname');
   console.log('rt of hostname', rt);
   rt = await ssh.exec('ls hoge');
-  console.log('rt of ls hoge', rt);
+  console.log('rt of "ls hoge"', rt);
   ssh.disconnect();
   return rt;
 }
