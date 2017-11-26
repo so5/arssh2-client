@@ -25,16 +25,20 @@ async function test(config){
       console.log('stderr:', data);
     });
 
-  let rt = await ssh.exec('hostname');
-  console.log('rt of hostname', rt);
-  rt = await ssh.exec('ls hoge');
-  console.log('rt of "ls hoge"', rt);
+  let promisess=[];
+  for(let i = 0; i<80; i++){
+    promisess.push(ssh.exec('sleep 1 && echo \`hostname\` :'+i));
+  }
+  promisess.push(ssh.exec('date'));
+  await Promise.all(promisess)
+  .catch((err)=>{
+    console.log(err);
+  });
   ssh.disconnect();
-  return rt;
 }
 
 async function main(){
-  let data = await util.promisify(fs.readFile)('yasshTestSettings.json')
+  let data = await util.promisify(fs.readFile)('ARsshTestSettings.json')
     .catch((err)=>{
       console.log('config setting file read error', err);
     });
