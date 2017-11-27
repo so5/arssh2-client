@@ -12,7 +12,7 @@ describe('ARssh2', function(){
   let configs = JSON.parse(data);
 
   // change following lines to change ssh settings
-  let config = configs[0];
+  let config = configs[1];
   let keyFile = `${process.env.HOME}/.ssh/id_rsa`;
 
   config.privateKey = fs.readFileSync(keyFile).toString();
@@ -20,8 +20,7 @@ describe('ARssh2', function(){
 
 
   beforeEach(function(){
-    console.log('beforeEach called');
-    ssh = new sshClient(configs[0]);
+    ssh = new sshClient(config);
   });
   afterEach(function(){
     ssh.disconnect();
@@ -42,7 +41,7 @@ describe('ARssh2', function(){
       });
       ssh.exec(`echo ${testText} >&2`);
     });
-    it('80 times command execution after 1sec sleep',async function(){
+    it.skip('80 times command execution after 1sec sleep',async function(){
       try{
         for(let i=0; i< 80; i++){
           ssh.on('stdout ',(data)=>{
