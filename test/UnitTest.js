@@ -8,17 +8,12 @@ chai.use(chaiAsPromised);
 const assert = chai.assert;
 chai.should();
 
+const del = require('del');
+
 const PsshClient = require('../lib/PsshClient.js');
-const {isDir, realpath, mkdir_p} = require('../lib/util.js');
+const {mput, isDir, realpath, mkdir_p, ls} = require('../lib/util.js');
 
-let data = fs.readFileSync('test/ARsshTestSettings.json');
-let configs = JSON.parse(data);
-// change following lines to change ssh settings
-let config = configs[1];
-let keyFile = `${process.env.HOME}/.ssh/id_rsa`;
-
-config.privateKey = fs.readFileSync(keyFile).toString();
-//config.debug=console.log  // enable if you need ssh2's debug log to console
+let config = require('./config');
 
 
 let ssh = new PsshClient(config);
@@ -66,7 +61,6 @@ describe('PsshClient', function(){
 
 describe('sftpUtil', function(){
   let sftp;
-  //TODO should be checkd with absolute path
   let testDirname='ARssh_testDir'
   let testFilename='ARSSH_testFile'
   let nonExisting='ARSSH_nonExistingPath'
@@ -83,6 +77,110 @@ describe('sftpUtil', function(){
   afterEach(async function(){
     await ssh.exec(`rm -fr ${testDirname} ${testFilename}`);
     ssh.disconnect();
+  });
+
+  describe('#mput', function(){
+    let localFiles=[
+      `${testDirname}/foo`,
+      `${testDirname}/bar`,
+      `${testDirname}/baz`,
+      `${testDirname}/hoge/huga`,
+      `${testDirname}/hoge/piyo`,
+      `${testDirname}/hoge/poyo`,
+    ];
+    let testDirname2=`${testDirname}2`;
+    beforeEach(async function(){
+      fs.mkdirSync(testDirname);
+      fs.mkdirSync(path.resolve(testDirname, 'hoge'));
+      localFiles.forEach((localFile)=>{
+        // after writeFile, all files contains its own filename
+        fs.writeFileSync(localFile, localFile);
+      });
+      await mkdir_p(sftp, `${testDirname2}/${testDirname2}`).catch(()=>{});
+      await ssh.exec(`touch ${testDirname2}/hoge`);
+    });
+    afterEach(async function(){
+      await del(testDirname);
+      // await ssh.exec(`rm -fr ${testDirname2}`);
+    });
+
+    describe.only('#ls', function(){
+      it('should get empty array when listing empty directory', function(){
+        let rt = ls(sftp, `${testDirname2}/${testDirname2}`);
+        return Promise.all([
+          rt.should.be.fulfilled,
+          rt.should.not.be.rejected,
+          rt.should.become([])
+        ])
+      });
+      it('should get filename when listing existing file', function(){
+        let rt = ls(sftp, `${testDirname2}/hoge`);
+        return Promise.all([
+          rt.should.be.fulfilled,
+          rt.should.not.be.rejected,
+          rt.should.become(["hoge"])
+        ])
+      });
+      it('should get names when listing existing directory which contain filename and directories', function(){
+        let rt = ls(sftp, `${testDirname2}`);
+        return Promise.all([
+          rt.should.be.fulfilled,
+          rt.should.not.be.rejected,
+          rt.should.eventually.be.a('array'),
+          rt.should.eventually.be.lengthOf(2),
+          rt.should.eventually.have.members(["hoge",`${testDirname2}`])
+        ])
+      });
+    });
+
+    it('should put single file to server', function(){
+      let src=path.join(testDirname, 'foo');
+      let rt = mput(sftp, src, 'foo');
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ])
+    });
+    it('should put single file to server and rename', function(){
+      let src=path.join(testDirname, 'foo');
+      let rt = mput(sftp, src, 'bar');
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ])
+    });
+    it('should put single file to existing directory on the server', async function(){
+      let src=path.join(testDirname, 'foo');
+      let dst = `${testDirname}2`;
+      let rt = mput(sftp, src, dst);
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ])
+    });
+    it.skip('should put multi file to server', function(){
+      let src=localFiles;
+      let rt = mput(sftp, src, './');
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ]);
+    });
+    it('should put files in the specified directory to server', function(){
+      let src=testDirname;
+      let rt = mput(sftp, src, './');
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ]);
+    });
+
+
   });
   describe('#isDir', function(){
     it('should return true with dir', function(){
@@ -111,7 +209,36 @@ describe('sftpUtil', function(){
     });
   });
 
-  describe('#realpath', function(){
+  describe('#mkdir_p', function(){
+    it('should make child of existing directory', function(){
+      let rt=mkdir_p(sftp, testDirname+'/hogehoge');
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ]);
+    });
+    it('should make child dir of non-existing directory', function(){
+      let tmpDirname=nonExisting+'/hogehoge/foo/bar/baz/huga';
+      let rt=mkdir_p(sftp, tmpDirname);
+      return Promise.all([
+        rt.should.be.fulfilled,
+        rt.should.not.be.rejected,
+        rt.should.become(undefined)
+      ]);
+    });
+    it('should cause error if making existing directory', function(){
+      let rt=mkdir_p(sftp, testDirname);
+      return Promise.all([
+        rt.should.not.be.fulfilled,
+        rt.should.be.rejectedWith('Failure')
+      ]);
+    });
+    it.skip('should cause error if making child dir of not-owned directory', function(){
+    });
+  });
+
+  describe.skip('#realpath is using promisify for now so skip all test', function(){
     it('should return absolute path on dir', function(){
       let rt = realpath(sftp, testDirname);
       return Promise.all([
@@ -142,35 +269,6 @@ describe('sftpUtil', function(){
         rt.should.not.be.fulfilled,
         rt.should.be.rejectedWith('No such file')
       ])
-    });
-  });
-
-  describe('#mkdir_p', function(){
-    it('should make child of existing directory', function(){
-      let rt=mkdir_p(sftp, testDirname+'/hogehoge');
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(0)
-      ]);
-    });
-    it('should make child dir of non-existing directory', function(){
-      let tmpDirname=nonExisting+'/hogehoge/foo/bar/baz/huga';
-      let rt=mkdir_p(sftp, tmpDirname);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(0)
-      ]);
-    });
-    it('should cause error if making existing directory', function(){
-      let rt=mkdir_p(sftp, testDirname);
-      return Promise.all([
-        rt.should.not.be.fulfilled,
-        rt.should.be.rejectedWith('Failure')
-      ]);
-    });
-    it.skip('should cause error if making child dir of not-owned directory', function(){
     });
   });
 

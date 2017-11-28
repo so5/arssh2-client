@@ -4,7 +4,7 @@ const fs = require('fs');
 
 const sshClient = require('../lib/index.js');
 
-describe('ARssh2', function(){
+describe.skip('ARssh2', function(){
   this.timeout(10000);
   let ssh=null;
 
