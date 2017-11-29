@@ -12,7 +12,7 @@ const should = chai.should();
 const del = require('del');
 
 const PsshClient = require('../lib/PsshClient.js');
-const {mput, isDir, realpath, mkdir_p, ls} = require('../lib/util.js');
+const {mput, isDir, realpath, mkdir_p, ls} = require('../lib/sftpUtil.js');
 
 let config = require('./config');
 let ssh = new PsshClient(config);
