@@ -154,29 +154,23 @@ describe('sftpUtil', function(){
     });
   });
 
-  describe('#mget', function(){
+  describe('#get', function(){
     [
       {
         src: path.join(remoteRoot, 'foo'),
         dst: path.join(localRoot, 'foobar'),
         rt: ['foobar'],
-        message: 'get single file and rename'
+        message: 'get file and rename'
       },
       {
         src: path.join(remoteRoot, 'foo'),
         dst: localEmptyDir,
         rt: ['foo'],
-        message: 'get single file to directory'
-      },
-      {
-        src: remoteFiles,
-        dst: localEmptyDir,
-        rt: ["foo", "bar", "baz", "piyo", "puyo", "poyo"],
-        message: 'get multi file and directory'
+        message: 'get file to directory'
       }
     ].forEach(function(param, i){
-      it('should get file and directories from server', function(){
-        let promise = sftp.mget( param.src, param.dst)
+      it('should get file from server', function(){
+        let promise = sftp.get( param.src, param.dst)
           .then(async ()=>{
             let rt;
             let stats = await util.promisify(fs.stat)(param.dst);
@@ -193,37 +187,30 @@ describe('sftpUtil', function(){
     [
       {src: nonExisting, error: 'src must be file'},
       {src: remoteRoot, error: 'src must be file'},
-      {src: [remoteRoot, nonExisting, remoteEmptyDir], error: 'all src is not file'},
     ].forEach(function(param){
       it('should reject when getting non existing file', function(){
-        let promise = sftp.mget(param.src, remoteRoot)
+        let promise = sftp.get(param.src, remoteRoot)
         return promise.should.be.rejectedWith(param.error);
       });
     });
   });
-  describe('#mput', function(){
+  describe('#put', function(){
     [
       {
         src: path.join(localRoot, 'foo'),
         dst: path.join(remoteRoot, 'foobar'),
         rt: ['foobar'],
-        message: 'put single file and rename'
+        message: 'put file and rename'
       },
       {
         src: path.join(localRoot, 'foo'),
         dst: remoteEmptyDir,
         rt: ['foo'],
-        message: 'put single file to directory'
-      },
-      {
-        src: localFiles,
-        dst: remoteEmptyDir,
-        rt: ["foo", "bar", "baz", "piyo", "puyo", "poyo"],
-        message: 'put multi file and directory'
+        message: 'put file to directory'
       },
     ].forEach(function(param){
-      it('should put file and directories to server', function(){
-        let promise = sftp.mput( param.src, param.dst)
+      it('should put file to server', function(){
+        let promise = sftp.put( param.src, param.dst)
           .then(async ()=>{
             let rt = await sftp.ls(param.dst);
             rt.should.have.members(param.rt, param.message)
@@ -233,11 +220,10 @@ describe('sftpUtil', function(){
     });
     [
       {src: nonExisting, error: 'src must be file'},
-      {src: localRoot, error: 'src must be file'},
-      {src: [localRoot, nonExisting, localEmptyDir], error: 'all src is not file'}
+      {src: localRoot, error: 'src must be file'}
     ].forEach(function(param){
       it('should reject when sending non existing file', function(){
-        let promise = sftp.mput(param.src, remoteRoot)
+        let promise = sftp.put(param.src, remoteRoot)
         return promise.should.be.rejectedWith(param.error);
       });
     });
