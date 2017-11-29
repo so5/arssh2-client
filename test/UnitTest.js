@@ -20,6 +20,7 @@ let ssh = new PsshClient(config);
 // define filenames
 let localRoot = 'ARssh_testLocalDir'
 let localDir2 = `${localRoot}/hoge`
+let localEmptyDir = `${localRoot}/huga`
 
 let localFiles=[
   `${localRoot}/foo`,
@@ -102,12 +103,13 @@ describe('sftpUtil', function(){
     sftp = new sftpUtil(sftpStream);
 
     // make sure any test files are not exist on both side
-    await ssh.exec(`rm -fr ${localRoot} ${remoteRoot} ${nonExisting}`);
-    await del(`${localRoot} ${remoteRoot} ${nonExisting}`);
+    await ssh.exec(`rm -fr ${remoteRoot}`);
+    await del(localRoot);
 
     // create local files
     fs.mkdirSync(localRoot);
     fs.mkdirSync(localDir2);
+    fs.mkdirSync(localEmptyDir);
     localFiles.forEach((localFile)=>{
       // after writeFile, all files contains its own filename
       fs.writeFileSync(localFile, localFile+'\n');
@@ -130,7 +132,7 @@ describe('sftpUtil', function(){
   });
 
   afterEach(async function(){
-    await ssh.exec(`rm -fr ${localRoot} ${remoteRoot} ${nonExisting}`);
+    await ssh.exec(`rm -fr ${remoteRoot}`);
     await del(localRoot);
     ssh.disconnect();
   });
@@ -152,6 +154,53 @@ describe('sftpUtil', function(){
     });
   });
 
+  describe('#mget', function(){
+    [
+      {
+        src: path.join(remoteRoot, 'foo'),
+        dst: path.join(localRoot, 'foobar'),
+        rt: ['foobar'],
+        message: 'get single file and rename'
+      },
+      {
+        src: path.join(remoteRoot, 'foo'),
+        dst: localEmptyDir,
+        rt: ['foo'],
+        message: 'get single file to directory'
+      },
+      {
+        src: remoteFiles,
+        dst: localEmptyDir,
+        rt: ["foo", "bar", "baz", "piyo", "puyo", "poyo"],
+        message: 'get multi file and directory'
+      }
+    ].forEach(function(param, i){
+      it('should get file and directories from server', function(){
+        let promise = sftp.mget( param.src, param.dst)
+          .then(async ()=>{
+            let rt;
+            let stats = await util.promisify(fs.stat)(param.dst);
+            if(stats.isDirectory()){
+              rt = await util.promisify(fs.readdir)(param.dst);
+            }else{
+              rt = [path.basename(param.dst)];
+            }
+            rt.should.have.members(param.rt, param.message)
+          });
+        return promise.should.be.fulfilled
+      });
+    });
+    [
+      {src: nonExisting, error: 'src must be file'},
+      {src: remoteRoot, error: 'src must be file'},
+      {src: [remoteRoot, nonExisting, remoteEmptyDir], error: 'all src is not file'},
+    ].forEach(function(param){
+      it('should reject when getting non existing file', function(){
+        let promise = sftp.mget(param.src, remoteRoot)
+        return promise.should.be.rejectedWith(param.error);
+      });
+    });
+  });
   describe('#mput', function(){
     [
       {
@@ -183,9 +232,9 @@ describe('sftpUtil', function(){
       });
     });
     [
-      {src: nonExisting, error: `ENOENT: no such file or directory, lstat '${nonExisting}'`},
-      {src: localRoot, error: "src must be file"},
-      {src: [localRoot], error: "all src is not file"},
+      {src: nonExisting, error: 'src must be file'},
+      {src: localRoot, error: 'src must be file'},
+      {src: [localRoot, nonExisting, localEmptyDir], error: 'all src is not file'}
     ].forEach(function(param){
       it('should reject when sending non existing file', function(){
         let promise = sftp.mput(param.src, remoteRoot)
