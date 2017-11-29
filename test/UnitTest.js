@@ -141,6 +141,19 @@ describe('sftpUtil', function(){
   //
   // actual test start here !!
   //
+  describe('#isDir', function(){
+    [
+      {arg: remoteRoot, expected: true},
+      {arg: path.join(remoteRoot, 'foo'), expected: false},
+      {arg: nonExisting, expected: false}
+    ].forEach(function (param){
+      it('should return true with dir', function(){
+        let rt = sftp.isDir(param.arg);
+        return rt.should.become(param.expected)
+      });
+    });
+  });
+
   describe('#ls', function(){
     [
       {args: path.join(remoteRoot,nonExisting), expected: []},
@@ -168,7 +181,7 @@ describe('sftpUtil', function(){
         rt: ['foo'],
         message: 'get file to directory'
       }
-    ].forEach(function(param, i){
+    ].forEach(function(param){
       it('should get file from server', function(){
         let promise = sftp.get( param.src, param.dst)
           .then(async ()=>{
@@ -194,6 +207,7 @@ describe('sftpUtil', function(){
       });
     });
   });
+
   describe('#put', function(){
     [
       {
@@ -229,93 +243,23 @@ describe('sftpUtil', function(){
     });
   });
 
-  describe('#isDir', function(){
-    it('should return true with dir', function(){
-      let rt = sftp.isDir(remoteRoot);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(true)
-      ])
-    });
-    it('should return false with file', function(){
-      let rt = sftp.isDir(`${remoteRoot}/foo`);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(false)
-      ])
-    });
-    it('should return false with nonExisting path', function(){
-      let rt = sftp.isDir(nonExisting);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(false)
-      ])
-    });
-  });
 
   describe('#mkdir_p', function(){
     it('should make child of existing directory', function(){
       let rt=sftp.mkdir_p(remoteRoot+'/hogehoge');
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.become(undefined)
-      ]);
+      return rt.should.become(undefined);
     });
     it('should make child dir of non-existing directory', function(){
       let tmpDirname=`${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga`;
       let rt=sftp.mkdir_p(tmpDirname);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.become(undefined)
-      ]);
+      return rt.should.become(undefined);
     });
     it('should cause error if making existing directory', function(){
       let rt=sftp.mkdir_p(remoteRoot);
-      return Promise.all([
-        rt.should.not.be.fulfilled,
-        rt.should.be.rejectedWith('Failure')
-      ]);
+      return rt.should.be.rejectedWith('Failure');
     });
     it.skip('should cause error if making child dir of not-owned directory', function(){
     });
   });
-
-  describe.skip('#realpath is using promisify for now so skip all test', function(){
-    it('should return absolute path on dir', function(){
-      let rt = sftp.realpath(localRoot);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(path.resolve(homedir, localRoot))
-      ])
-    });
-    it('should return absolute path on file', function(){
-      let rt = sftp.realpath(testFilename);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(path.resolve(homedir, testFilename))
-      ])
-    });
-    it('should return absolute path on nonExisting path', function(){
-      let rt = sftp.realpath(nonExisting);
-      return Promise.all([
-        rt.should.be.fulfilled,
-        rt.should.not.be.rejected,
-        rt.should.become(path.resolve(homedir, nonExisting))
-      ])
-    });
-    it('should rejected on child of nonExisting path', function(){
-      let rt = sftp.realpath(nonExisting+'/hogehoge');
-      return Promise.all([
-        rt.should.not.be.fulfilled,
-        rt.should.be.rejectedWith('No such file')
-      ])
-    });
-  });
-
 });
 
