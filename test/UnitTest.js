@@ -12,7 +12,7 @@ const should = chai.should();
 const del = require('del');
 
 const PsshClient = require('../lib/PsshClient.js');
-const {mput, isDir, realpath, mkdir_p, ls} = require('../lib/sftpUtil.js');
+const sftpUtil  = require('../lib/sftpUtils.js');
 
 let config = require('./config');
 let ssh = new PsshClient(config);
@@ -98,7 +98,8 @@ describe('sftpUtil', function(){
 
   beforeEach(async function(){
     await ssh.connect();
-    sftp = await ssh.sftp();
+    sftpStream = await ssh.sftp();
+    sftp = new sftpUtil(sftpStream);
 
     // make sure any test files are not exist on both side
     await ssh.exec(`rm -fr ${localRoot} ${remoteRoot} ${nonExisting}`);
@@ -113,8 +114,8 @@ describe('sftpUtil', function(){
     });
 
     //create remote files
-    await mkdir_p(sftp, `${remoteDir2}`).catch(()=>{});
-    await mkdir_p(sftp, `${remoteEmptyDir}`).catch(()=>{});
+    await sftp.mkdir_p(`${remoteDir2}`).catch(()=>{});
+    await sftp.mkdir_p(`${remoteEmptyDir}`).catch(()=>{});
     remoteFiles.forEach(async (remoteFile)=>{
       await ssh.exec(`touch ${remoteFile}`);
     });
@@ -145,7 +146,7 @@ describe('sftpUtil', function(){
       {args: remoteRoot,                        expected: ["foo", "bar", "baz", "hoge", "huga"]}
     ].forEach(function(param){
       it('should return directory contents', function(){
-        let rt = ls(sftp, param.args);
+        let rt = sftp.ls( param.args);
         return rt.should.eventually.have.members(param.expected);
       });
     });
@@ -173,9 +174,9 @@ describe('sftpUtil', function(){
       },
     ].forEach(function(param){
       it('should put file and directories to server', function(){
-        let promise = mput(sftp, param.src, param.dst)
+        let promise = sftp.mput( param.src, param.dst)
           .then(async ()=>{
-            let rt = await ls(sftp, param.dst);
+            let rt = await sftp.ls(param.dst);
             rt.should.have.members(param.rt, param.message)
           });
         return promise.should.be.fulfilled
@@ -187,7 +188,7 @@ describe('sftpUtil', function(){
       {src: [localRoot], error: "all src is not file"},
     ].forEach(function(param){
       it('should reject when sending non existing file', function(){
-        let promise = mput(sftp, param.src, remoteRoot)
+        let promise = sftp.mput(param.src, remoteRoot)
         return promise.should.be.rejectedWith(param.error);
       });
     });
@@ -195,7 +196,7 @@ describe('sftpUtil', function(){
 
   describe('#isDir', function(){
     it('should return true with dir', function(){
-      let rt = isDir(sftp, remoteRoot);
+      let rt = sftp.isDir(remoteRoot);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -203,7 +204,7 @@ describe('sftpUtil', function(){
       ])
     });
     it('should return false with file', function(){
-      let rt = isDir(sftp, `${remoteRoot}/foo`);
+      let rt = sftp.isDir(`${remoteRoot}/foo`);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -211,7 +212,7 @@ describe('sftpUtil', function(){
       ])
     });
     it('should return false with nonExisting path', function(){
-      let rt = isDir(sftp, nonExisting);
+      let rt = sftp.isDir(nonExisting);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -222,7 +223,7 @@ describe('sftpUtil', function(){
 
   describe('#mkdir_p', function(){
     it('should make child of existing directory', function(){
-      let rt=mkdir_p(sftp, remoteRoot+'/hogehoge');
+      let rt=sftp.mkdir_p(remoteRoot+'/hogehoge');
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.become(undefined)
@@ -230,14 +231,14 @@ describe('sftpUtil', function(){
     });
     it('should make child dir of non-existing directory', function(){
       let tmpDirname=`${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga`;
-      let rt=mkdir_p(sftp, tmpDirname);
+      let rt=sftp.mkdir_p(tmpDirname);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.become(undefined)
       ]);
     });
     it('should cause error if making existing directory', function(){
-      let rt=mkdir_p(sftp, remoteRoot);
+      let rt=sftp.mkdir_p(remoteRoot);
       return Promise.all([
         rt.should.not.be.fulfilled,
         rt.should.be.rejectedWith('Failure')
@@ -249,7 +250,7 @@ describe('sftpUtil', function(){
 
   describe.skip('#realpath is using promisify for now so skip all test', function(){
     it('should return absolute path on dir', function(){
-      let rt = realpath(sftp, localRoot);
+      let rt = sftp.realpath(localRoot);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -257,7 +258,7 @@ describe('sftpUtil', function(){
       ])
     });
     it('should return absolute path on file', function(){
-      let rt = realpath(sftp, testFilename);
+      let rt = sftp.realpath(testFilename);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -265,7 +266,7 @@ describe('sftpUtil', function(){
       ])
     });
     it('should return absolute path on nonExisting path', function(){
-      let rt = realpath(sftp, nonExisting);
+      let rt = sftp.realpath(nonExisting);
       return Promise.all([
         rt.should.be.fulfilled,
         rt.should.not.be.rejected,
@@ -273,7 +274,7 @@ describe('sftpUtil', function(){
       ])
     });
     it('should rejected on child of nonExisting path', function(){
-      let rt = realpath(sftp, nonExisting+'/hogehoge');
+      let rt = sftp.realpath(nonExisting+'/hogehoge');
       return Promise.all([
         rt.should.not.be.fulfilled,
         rt.should.be.rejectedWith('No such file')
