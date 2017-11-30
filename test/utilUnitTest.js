@@ -1,14 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// setup test framework
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const assert = chai.assert;
 const should = chai.should();
 
+// testee
 const {isDirLocal, isFileLocal, getSizeLocal} = require('../lib/utils');
 
+// test data
 const {nonExisting, clearLocalTestFiles} = require('./testFiles');
 const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
 

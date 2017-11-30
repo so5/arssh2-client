@@ -5,11 +5,12 @@ const path = require('path');
 const chai = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const assert = chai.assert;
+const assert = chai.assert; //TODO should be removed
 const should = chai.should();
 
+const ARsshClient = require('../lib/index.js');
 const PsshClient = require('../lib/PsshClient.js');
-const sftpUtil  = require('../lib/sftpUtils.js');
+const SftpUtil  = require('../lib/sftpUtils.js');
 
 let config = require('./config');
 
@@ -68,22 +69,22 @@ describe('PsshClient', function(){
   });
 });
 
-describe('sftpUtil', function(){
+describe('SftpUtil', function(){
   let sftp;
   let homedir;
 
   beforeEach(async function(){
     this.timeout(10000);
     sftpStream = await ssh.sftp();
-    sftp = new sftpUtil(sftpStream);
+    sftp = new SftpUtil(sftpStream);
 
     // get remote ${HOME}
     ssh.once('stdout', (data)=>{
       homedir=data.trim();
     })
     await ssh.exec('pwd');
-    // TODO add pwd to sftpUtil and replace
-    // sftpUtil.pwd('.')
+    // TODO add pwd to SftpUtil and replace
+    // SftpUtil.pwd('.')
 
     let promises=[]
     promises.push(clearRemoteTestFiles(ssh,sftp).then(createRemoteFiles.bind(null, ssh, sftp)));
@@ -94,7 +95,7 @@ describe('sftpUtil', function(){
   after(async function(){
     await ssh.connect()
     sftpStream = await ssh.sftp();
-    sftp = new sftpUtil(sftpStream);
+    sftp = new SftpUtil(sftpStream);
     let promises=[]
     promises.push(clearRemoteTestFiles(ssh,sftp));
     promises.push(clearLocalTestFiles());
@@ -247,6 +248,44 @@ describe('sftpUtil', function(){
       return rt.should.be.rejectedWith('Failure');
     });
     it.skip('should cause error if making child dir of not-owned directory', function(){
+    });
+  });
+});
+
+describe.skip('ARssh2', function(){
+  describe('#exec', function(){
+    let testText = 'hoge';
+
+    it('single command with stdout',async function(){
+      ssh.on('stdout',(data)=>{
+        assert.equal(data, testText);
+      });
+      ssh.exec(`echo ${testText}`);
+    });
+    it('single command with stderr',async function(){
+      ssh.on('stderr',(data)=>{
+        assert.equal(data, testText);
+      });
+      ssh.exec(`echo ${testText} >&2`);
+    });
+    it.skip('80 times command execution after 1sec sleep',async function(){
+      try{
+        for(let i=0; i< 80; i++){
+          ssh.on('stdout ',(data)=>{
+            assert.equal(data, testText);
+          });
+          ssh.exec(`sleep 1&& echo ${testText}`);
+        }
+      }
+      catch(e){
+        assert.fail();
+      }
+    });
+  });
+  describe('#send', function(){
+    it('should send single file to server', async function(){
+    });
+    it('should send directory tree to server', async function(){
     });
   });
 });
