@@ -18,7 +18,6 @@ let localFiles=[
 
 let remoteRoot = 'ARssh_testRemoteDir'
 let remoteEmptyDir = `${remoteRoot}/huga`
-
 let remoteFiles=[
   `${remoteRoot}/foo`,
   `${remoteRoot}/bar`,

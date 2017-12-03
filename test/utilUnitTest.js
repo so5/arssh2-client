@@ -16,8 +16,14 @@ const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./test
 
 describe('utils functions in ARssh', function(){
   beforeEach(async function(){
-    await clearLocalTestFiles();
-    await createLocalFiles();
+    await clearLocalTestFiles()
+    .catch((e)=>{
+      console.log(e);
+    });
+    await createLocalFiles()
+    .catch((e)=>{
+      console.log(e);
+    });
   });
   describe('#isDirLocal', function(){
     [
