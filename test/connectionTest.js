@@ -311,8 +311,8 @@ describe('connection test', function(){
         result[32].should.have.equal('hoge');
       });
     });
-    describe('#send', function(){
-      this.timeout(0);
+    describe('file transfer', function(){
+      this.timeout(10000);
       beforeEach(async function(){
         let promises=[]
         promises.push(clearRemoteTestFiles(pssh,sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
@@ -326,37 +326,40 @@ describe('connection test', function(){
         await Promise.all(promises);
       });
 
-      [
-        {src: localFiles[0], dst: remoteEmptyDir, expected: ['foo']},
-        {src: localFiles[0], dst: path.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
-      ].forEach(function(param){
-        it('should send single file to server', async function(){
-          await ssh.send(param.src, param.dst)
-          let rt = await sftp.ls(param.dst);
-          rt.should.have.members(param.expected);
+      describe('#send', function(){
+        [
+          {src: localFiles[0], dst: remoteEmptyDir, expected: ['foo']},
+          {src: localFiles[0], dst: path.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
+        ].forEach(function(param){
+          it('should send single file to server', async function(){
+            await ssh.send(param.src, param.dst)
+            let rt = await sftp.ls(param.dst);
+            rt.should.have.members(param.expected);
+          });
+        });
+        it('should send directory tree to server', async function(){
+          await ssh.send(localRoot, remoteEmptyDir);
+          let rt = await sftp.ls(remoteEmptyDir);
+          rt.should.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
+          let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
+          rt2.should.have.members(['piyo', 'puyo', 'poyo']);
         });
       });
-      it('should send directory tree to server', async function(){
-        await ssh.send(localRoot, remoteEmptyDir);
-        let rt = await sftp.ls(remoteEmptyDir);
-        rt.should.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
-        let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
-        rt2.should.have.members(['piyo', 'puyo', 'poyo']);
-      });
-    });
-    describe.skip('#recv', function(){
-      this.timeout(10000);
-      [
-        {src: remoteFiles[0], dst: localEmptyDir, expected: ['foo']},
-        {src: remoteFiles[0], dst: path.join(localEmptyDir,'hoge'), expected: ['hoge']},
-      ].forEach(function(param){
-        it('should recv single file from server', async function(){
-          await ssh.recv(param.src, param.dst)
-          let rt = await fs.readdir(param.dst)
-          rt.should.have.members(param.expected);
+      describe.only('#recv', function(){
+        this.timeout(10000);
+        [
+          {src: remoteFiles[0], dst: localEmptyDir, expected: ['foo']},
+          {src: remoteFiles[0], dst: path.join(localEmptyDir,'hoge'), expected: ['hoge']},
+        ].forEach(function(param){
+          it('should recv single file from server', async function(){
+            await ssh.recv(param.src, param.dst)
+            debugger;
+            let rt = await promisify(fs.readdir)(param.dst)
+            rt.should.have.members(param.expected);
+          });
         });
-      });
-      it('should recv directory tree from server', async function(){
+        it('should recv directory tree from server', async function(){
+        });
       });
     });
   });
