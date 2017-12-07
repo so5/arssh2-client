@@ -7,6 +7,7 @@ const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const assert = chai.assert; //TODO should be removed
 const should = chai.should();
+const sinon = require('sinon');
 
 const ARsshClient = require('../lib/index.js');
 const PsshClient = require('../lib/PsshClient.js');
@@ -280,6 +281,7 @@ describe('connection test', function(){
 
     describe('#exec', function(){
       let testText = 'hoge';
+      let numExec = 20;
 
       it('single command with stdout',function(){
         ssh.on('stdout',(data)=>{
@@ -293,22 +295,20 @@ describe('connection test', function(){
         });
         return ssh.exec(`echo ${testText} >&2`).should.become(0);
       });
-      it.skip('80 times command execution after 1sec sleep',async function(){
+      it(`${numExec} times command execution after 1sec sleep`,async function(){
         this.timeout(0);
-        let result=[];
-        ssh.on('stdout ',(data)=>{
-          console.log(data);
-          result.push(data);
-        });
+        let sshout=sinon.stub();
+        let ssherr=sinon.stub();
+        ssh.on('stdout', console.log);
+        ssh.on('stderr', console.log);
+
         let promises=[];
-        for(let i=0; i< 80; i++){
-          promises.push(ssh.exec(`sleep 1&& echo ${testText}`));
+        for(let i=0; i< numExec; i++){
+          promises.push(ssh.exec(`sleep 1&& echo ${testText} ${i}`));
         }
         await Promise.all(promises);
-        result.should.have.lengthOf(80);
-        result[0].should.have.equal('hoge');
-        result[1].should.have.equal('hoge');
-        result[32].should.have.equal('hoge');
+        sshout.callCount.should.equal(numExec);
+        sshout.callCount.should.equal(0);
       });
     });
     describe('file transfer', function(){
@@ -345,7 +345,7 @@ describe('connection test', function(){
           rt2.should.have.members(['piyo', 'puyo', 'poyo']);
         });
       });
-      describe.only('#recv', function(){
+      describe('#recv', function(){
         this.timeout(10000);
         [
           {src: remoteFiles[0], dst: localEmptyDir, expected: ['foo']},

@@ -19,7 +19,6 @@ let existingFile = 'ARSSH_TEST_DUMMY_EXISTING_FILE'
 let existingDir  = 'ARSSH_TEST_DUMMY_EXISTING_DIR'
 let nonExisting  = 'ARSSH_TEST_DUMMY_NON_EXISTING_FILE'
 describe('ARsshClient', function(){
-  this.timeout(10000);
   before(async function(){
     try{
       await util.promisify(fs.writeFile)(existingFile, existingFile);
@@ -56,11 +55,19 @@ describe('ARsshClient', function(){
   });
 
   describe('#exec', function(){
+    this.timeout(0);
     it('should enqueue exec cmd', function(){
       return arssh.exec('hoge').should.be.fulfilled;
     });
     it('should reject if cmd is not string', async function(){
       return arssh.exec(1).should.be.rejectedWith('cmd must be string');
+    });
+    it('should enqueue exec cmd', function(){
+      let promises=[];
+      for(let i=0; i< 80; i++){
+        promises.push(arssh.exec('hoge'));
+      }
+      return Promise.all(promises).should.be.fulfilled;
     });
   });
 
