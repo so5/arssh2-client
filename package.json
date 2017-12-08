@@ -6,6 +6,7 @@
     "name": "Naoyuki Sogo"
   },
   "license": "MIT",
+  "repository": "github:so5/arssh2-client",
   "main": "lib/index.js",
   "scripts": {
     "test": "mocha"
