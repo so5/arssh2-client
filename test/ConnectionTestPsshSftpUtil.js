@@ -2,12 +2,14 @@ const {promisify} = require('util');
 const fs = require('fs');
 const path = require('path');
 
+// setup test framework
 const chai = require('chai');
+const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const assert = chai.assert; //TODO should be removed
-const should = chai.should();
 const sinon = require('sinon');
+const sinonChai = require("sinon-chai");
+chai.use(sinonChai);
 
 const ARsshClient = require('../lib/index.js');
 const PsshClient = require('../lib/PsshClient.js');
@@ -19,88 +21,32 @@ const {nonExisting, clearLocalTestFiles, clearRemoteTestFiles} = require('./test
 const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
 const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./testFiles');
 
-let ssh;
 
 process.on('unhandledRejection', console.dir);
 
 describe('connection test', function(){
-  describe('PsshClient', function(){
-    before(function(){
-      ssh = new PsshClient(config);
-    })
-    beforeEach(async function(){
-      await ssh.connect();
-    });
-    afterEach(function(){
-      ssh.disconnect();
-    });
-
-
-    describe('#isConnect', function(){
-      it('should be true after connect() called', function(){
-        return ssh.isConnected().should.become(true);
-      });
-      it('should be disconnected after disconnect() called', function(){
-        ssh.disconnect();
-        return ssh.isConnected().should.become(false);
-      });
-    });
-
-    describe('#exec', function(){
-      let testText = 'hoge';
-      it.skip('should be rejected if signal intrupted', function(){
-      });
-      it('should return zero without error', function(){
-        return ssh.exec('hostname').should.become(0);
-      });
-      it('should return non-zero value with error', function(){
-        return ssh.exec('ls hoge').should.not.become(0);
-      });
-      it('should fire stdout event if command produce output to stdout', function(){
-        ssh.once('stdout',(data)=>{
-          data.should.equal(testText+'\n');
-        });
-        return ssh.exec(`echo ${testText}`).should.become(0);
-      });
-      it('should fire stderr event if command produce output to stderr', function(){
-        ssh.once('stderr',(data)=>{
-          data.should.equal(testText+'\n');
-        });
-        return ssh.exec(`echo ${testText} >&2`).should.become(0);
-      });
-    });
-  });
-
   describe('SftpUtil', function(){
+    let pssh;
     let sftp;
 
-    before(function(){
-      ssh = new PsshClient(config);
-    })
     beforeEach(async function(){
       this.timeout(10000);
-      await ssh.connect();
-      sftpStream = await ssh.sftp();
+      pssh = new PsshClient(config);
+      await pssh.connect();
+      sftpStream = await pssh.sftp();
       sftp = new SftpUtil(sftpStream);
 
       let promises=[]
-      promises.push(clearRemoteTestFiles(ssh,sftp).then(createRemoteFiles.bind(null, ssh, sftp)));
+      promises.push(clearRemoteTestFiles(pssh,sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
       promises.push(clearLocalTestFiles().then(createLocalFiles));
       await Promise.all(promises);
     });
-    afterEach(function(){
-      ssh.disconnect();
-    });
-
-    after(async function(){
-      await ssh.connect()
-      sftpStream = await ssh.sftp();
-      sftp = new SftpUtil(sftpStream);
+    afterEach(async function(){
       let promises=[]
-      promises.push(clearRemoteTestFiles(ssh,sftp));
+      promises.push(clearRemoteTestFiles(pssh,sftp));
       promises.push(clearLocalTestFiles());
       await Promise.all(promises);
-      await ssh.disconnect()
+      await pssh.disconnect();
     });
 
     describe('#isDir', function(){
@@ -257,109 +203,6 @@ describe('connection test', function(){
         return rt.should.become(undefined);
       });
       it.skip('should cause error if making child dir of not-owned directory', function(){
-      });
-    });
-  });
-
-  describe('ARssh2', function(){
-    let pssh;
-    before(async function(){
-      pssh = new PsshClient(config);
-      await pssh.connect();
-      sftpStream = await pssh.sftp();
-      sftp = new SftpUtil(sftpStream);
-    });
-    beforeEach(function(){
-      ssh = new ARsshClient(config, {delay: 1000, connectionRetryDelay: 100});
-    });
-    afterEach(function(){
-      ssh.disconnect();
-    });
-    after(function(){
-      pssh.disconnect();
-    });
-
-    describe('#exec', function(){
-      let testText = 'hoge';
-      let numExec = 20;
-
-      it('single command with stdout',function(){
-        ssh.on('stdout',(data)=>{
-          data.trim().should.equal(testText);
-        });
-        return ssh.exec(`echo ${testText}`).should.become(0);
-      });
-      it('single command with stderr',function(){
-        ssh.on('stderr',(data)=>{
-          data.trim().should.equal(testText);
-        });
-        return ssh.exec(`echo ${testText} >&2`).should.become(0);
-      });
-      it(`${numExec} times command execution after 1sec sleep`,async function(){
-        this.timeout(0);
-        let sshout=sinon.stub();
-        let ssherr=sinon.stub();
-        ssh.on('stdout', console.log);
-        ssh.on('stderr', console.log);
-
-        let promises=[];
-        for(let i=0; i< numExec; i++){
-          promises.push(ssh.exec(`sleep 1&& echo ${testText} ${i}`));
-        }
-        await Promise.all(promises);
-        sshout.callCount.should.equal(numExec);
-        sshout.callCount.should.equal(0);
-      });
-    });
-    describe('file transfer', function(){
-      this.timeout(10000);
-      beforeEach(async function(){
-        let promises=[]
-        promises.push(clearRemoteTestFiles(pssh,sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
-        promises.push(clearLocalTestFiles().then(createLocalFiles));
-        await Promise.all(promises);
-      });
-      after(async function(){
-        let promises=[]
-        promises.push(clearRemoteTestFiles(pssh,sftp));
-        promises.push(clearLocalTestFiles());
-        await Promise.all(promises);
-      });
-
-      describe('#send', function(){
-        [
-          {src: localFiles[0], dst: remoteEmptyDir, expected: ['foo']},
-          {src: localFiles[0], dst: path.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
-        ].forEach(function(param){
-          it('should send single file to server', async function(){
-            await ssh.send(param.src, param.dst)
-            let rt = await sftp.ls(param.dst);
-            rt.should.have.members(param.expected);
-          });
-        });
-        it('should send directory tree to server', async function(){
-          await ssh.send(localRoot, remoteEmptyDir);
-          let rt = await sftp.ls(remoteEmptyDir);
-          rt.should.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
-          let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
-          rt2.should.have.members(['piyo', 'puyo', 'poyo']);
-        });
-      });
-      describe('#recv', function(){
-        this.timeout(10000);
-        [
-          {src: remoteFiles[0], dst: localEmptyDir, expected: ['foo']},
-          {src: remoteFiles[0], dst: path.join(localEmptyDir,'hoge'), expected: ['hoge']},
-        ].forEach(function(param){
-          it('should recv single file from server', async function(){
-            await ssh.recv(param.src, param.dst)
-            debugger;
-            let rt = await promisify(fs.readdir)(param.dst)
-            rt.should.have.members(param.expected);
-          });
-        });
-        it('should recv directory tree from server', async function(){
-        });
       });
     });
   });

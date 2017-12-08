@@ -3,9 +3,12 @@ const path = require('path');
 
 // setup test framework
 const chai = require('chai');
+const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const should = chai.should();
+const sinon = require('sinon');
+const sinonChai = require("sinon-chai");
+chai.use(sinonChai);
 
 // testee
 const {isDirLocal, isFileLocal, getSizeLocal} = require('../lib/utils');
@@ -14,17 +17,14 @@ const {isDirLocal, isFileLocal, getSizeLocal} = require('../lib/utils');
 const {nonExisting, clearLocalTestFiles} = require('./testFiles');
 const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
 
-describe('utils functions in ARssh', function(){
+describe('utilty functions in ARssh', function(){
   beforeEach(async function(){
-    await clearLocalTestFiles()
-    .catch((e)=>{
-      console.log(e);
-    });
-    await createLocalFiles()
-    .catch((e)=>{
-      console.log(e);
-    });
+    await clearLocalTestFiles().then(createLocalFiles)
   });
+  after(async function(){
+    await clearLocalTestFiles();
+  });
+
   describe('#isDirLocal', function(){
     [
       {arg: localRoot, expected: true},

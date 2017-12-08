@@ -6,7 +6,6 @@ const del = require('del');
 
 let localRoot = 'ARssh_testLocalDir'
 let localEmptyDir = `${localRoot}/huga`
-
 let localFiles=[
   `${localRoot}/foo`,
   `${localRoot}/bar`,
