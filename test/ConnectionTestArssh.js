@@ -23,7 +23,7 @@ const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./te
 
 process.on('unhandledRejection', console.dir);
 
-describe('arssh connection test', function(){
+describe.only('arssh connection test', function(){
   let arssh;
   let sshout=sinon.stub();
   let ssherr=sinon.stub();
