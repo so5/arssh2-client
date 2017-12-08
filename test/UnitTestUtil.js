@@ -17,7 +17,7 @@ const {isDirLocal, isFileLocal, getSizeLocal} = require('../lib/utils');
 const {nonExisting, clearLocalTestFiles} = require('./testFiles');
 const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
 
-describe('utilty functions in ARssh', function(){
+describe.only('utilty functions in ARssh', function(){
   beforeEach(async function(){
     await clearLocalTestFiles().then(createLocalFiles)
   });
