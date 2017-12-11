@@ -13,7 +13,7 @@ chai.use(sinonChai);
 
 const ARsshClient = require('../lib/index.js');
 const PsshClient = require('../lib/PsshClient.js');
-const SftpUtil  = require('../lib/sftpUtils.js');
+const SftpUtil  = require('../lib/SftpUtils.js');
 
 let config = require('./config');
 const {nonExisting, clearLocalTestFiles, clearRemoteTestFiles} = require('./testFiles');
