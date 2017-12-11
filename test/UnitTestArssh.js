@@ -19,6 +19,12 @@ let arssh;
 // test data
 const {clearLocalTestFiles, createLocalFiles, localRoot, localEmptyDir, localFiles, nonExisting} = require('./testFiles');
 let config = require('./config');
+//TODO make connection managers's stub and remove real config
+// let config = {
+// username: "foo",
+// hostname: "bar",
+// passphrase: "baz"
+// }
 
 describe('arssh UT', function(){
   beforeEach(function(){

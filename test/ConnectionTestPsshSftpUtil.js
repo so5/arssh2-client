@@ -24,7 +24,7 @@ const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./te
 
 process.on('unhandledRejection', console.dir);
 
-describe('connection test', function(){
+describe('connection test sftpUtil', function(){
   describe('SftpUtil', function(){
     let pssh;
     let sftp;
