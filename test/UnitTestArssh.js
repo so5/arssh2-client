@@ -18,13 +18,12 @@ let arssh;
 
 // test data
 const {clearLocalTestFiles, createLocalFiles, localRoot, localEmptyDir, localFiles, nonExisting} = require('./testFiles');
-let config = require('./config');
 //TODO make connection managers's stub and remove real config
-// let config = {
-// username: "foo",
-// hostname: "bar",
-// passphrase: "baz"
-// }
+let config = {
+  username: "foo",
+  hostname: "bar",
+  passphrase: "baz"
+}
 
 describe('arssh UT', function(){
   beforeEach(function(){
@@ -33,6 +32,8 @@ describe('arssh UT', function(){
     sinon.stub(arssh.executer, '_put').resolves();
     sinon.stub(arssh.executer, '_rput').resolves();
     sinon.stub(arssh.executer, '_get').resolves();
+    sinon.stub(arssh.cm, 'getConnection').resolves({count: 0});
+    sinon.stub(arssh.cm, 'disconnectAll').resolves();
   });
   afterEach(function(){
     arssh.disconnect();
