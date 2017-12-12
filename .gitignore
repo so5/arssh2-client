@@ -1,5 +1,7 @@
 #connection test setting file
 ARsshTestSettings.json
+.nyc_output/
+coverage/
 
 #for node related files
 # Logs
