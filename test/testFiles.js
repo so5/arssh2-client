@@ -56,7 +56,7 @@ let createRemoteFiles = async (ssh, sftp)=>{
   return Promise.all(promises);
 }
 
-let clearRemoteTestFiles = async (ssh, sftp)=>{
+let clearRemoteTestFiles = async (ssh)=>{
   return ssh.exec(`rm -fr ${remoteRoot}`);
 }
 let clearLocalTestFiles = async ()=>{

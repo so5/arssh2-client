@@ -1,12 +1,6 @@
-const {promisify} = require('util');
-const fs = require('fs');
-const path = require('path');
-const del = require('del');
-
 // setup test framework
 const chai = require('chai');
 const {expect} = require('chai');
-const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
@@ -18,7 +12,7 @@ const ARsshClient = require('../lib/index.js');
 let arssh;
 
 // test data
-const {clearLocalTestFiles, createLocalFiles, localRoot, localEmptyDir, localFiles, nonExisting} = require('./testFiles');
+const {clearLocalTestFiles, createLocalFiles, localEmptyDir, localFiles, nonExisting} = require('./testFiles');
 
 let config = {
   username: "foo",
@@ -73,17 +67,17 @@ describe('arssh UT', function(){
 
   describe('#exec', function(){
     it('should enqueue exec cmd', function(){
-      return arssh.exec('hoge').should.be.fulfilled;
+      return expect(arssh.exec('hoge')).to.be.fulfilled;
     });
     it('should reject if cmd is not string', async function(){
-      return arssh.exec(1).should.be.rejectedWith('cmd must be string');
+      return expect(arssh.exec(1)).to.be.rejectedWith('cmd must be string');
     });
     it('should enqueue exec cmd', function(){
       let promises=[];
       for(let i=0; i< 80; i++){
         promises.push(arssh.exec('hoge'));
       }
-      return Promise.all(promises).should.be.fulfilled;
+      return expect(Promise.all(promises)).to.be.fulfilled;
     });
   });
 
@@ -96,34 +90,34 @@ describe('arssh UT', function(){
     });
     describe('#send', function(){
       it('should enqueue put cmd if src is existing file', function(){
-        return arssh.send(localFiles[0],'hoge').should.be.fulfilled;
+        return expect(arssh.send(localFiles[0],'hoge')).to.be.fulfilled;
       });
       it('should enqueue rput cmd if src is existing directory', function(){
-        return arssh.send(localEmptyDir,'hoge').should.be.fulfilled;
+        return expect(arssh.send(localEmptyDir,'hoge')).to.be.fulfilled;
       });
       it('should reject if src is not existing', async function(){
-        return arssh.send(nonExisting,'hoge').should.be.rejectedWith('src must be existing file or directory');
+        return expect(arssh.send(nonExisting,'hoge')).to.be.rejectedWith('src must be existing file or directory');
       });
       it('should reject if src is not string', async function(){
-        return arssh.send(1,'hoge').should.be.rejectedWith('path must be a string or Buffer');
+        return expect(arssh.send(1,'hoge')).to.be.rejectedWith('path must be a string or Buffer');
       });
       it('should reject if dst is not string', async function(){
-        return arssh.send(localFiles[0], 2).should.be.rejectedWith('dst must be string');
+        return expect(arssh.send(localFiles[0], 2)).to.be.rejectedWith('dst must be string');
       });
     });
 
     describe('#recv', function(){
       it('should enqueue recv cmd', function(){
-        return arssh.recv('hoge','hoge').should.be.fulfilled;
+        return expect(arssh.recv('hoge','hoge')).to.be.fulfilled;
       });
       it('should reject if dst is existing file', async function(){
-        return arssh.recv('hoge', localFiles[0]).should.be.rejectedWith('dst must not be existing file');
+        return expect(arssh.recv('hoge', localFiles[0])).to.be.rejectedWith('dst must not be existing file');
       });
       it('should reject if dst is not string', async function(){
-        return arssh.recv('hoge', 1).should.be.rejectedWith('path must be a string or Buffer');
+        return expect(arssh.recv('hoge', 1)).to.be.rejectedWith('path must be a string or Buffer');
       });
       it('should reject if src is not string', async function(){
-        return arssh.recv(1, 'hoge').should.be.rejectedWith('src must be string');
+        return expect(arssh.recv(1, 'hoge')).to.be.rejectedWith('src must be string');
       });
     });
   });

@@ -12,7 +12,7 @@ try{
   //config.debug=console.log  // to output ssh2's debug log
 
 }catch(e){
-  console.log('test setting file load failed');
+  console.log('test setting file load failed'); // eslint-disable-line no-console
 }
 
 module.exports=config;

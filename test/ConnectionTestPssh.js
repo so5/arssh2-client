@@ -6,24 +6,22 @@ const path = require('path');
 // setup test framework
 const chai = require('chai');
 const {expect} = require('chai');
-const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const sinon = require('sinon');
-const sinonChai = require("sinon-chai");
-chai.use(sinonChai);
+// const sinon = require('sinon');
+// const sinonChai = require("sinon-chai");
+// chai.use(sinonChai);
 
-const ARsshClient = require('../lib/index.js');
 const PsshClient = require('../lib/PsshClient.js');
 const SftpUtil  = require('../lib/SftpUtils.js');
 
 let config = require('./config');
 
 const {nonExisting, clearLocalTestFiles, clearRemoteTestFiles} = require('./testFiles');
-const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
-const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./testFiles');
+const {createLocalFiles, localRoot, localEmptyDir} = require('./testFiles');
+const {createRemoteFiles, remoteRoot,remoteEmptyDir} = require('./testFiles');
 
-process.on('unhandledRejection', console.dir);
+//process.on('unhandledRejection', console.dir);
 
 describe.skip('connection test', function(){
   this.timeout(20000);
@@ -40,7 +38,7 @@ describe.skip('connection test', function(){
 
     describe('#isConnect', function(){
       it('should be true after connect() called', function(){
-        return pssh.isConnected().should.become(true);
+        return expect(pssh.isConnected()).to.become(true);
       });
       it('should be disconnected after disconnect() called', function(){
         pssh.disconnect();
@@ -80,7 +78,7 @@ describe.skip('connection test', function(){
     beforeEach(async function(){
       pssh = new PsshClient(config);
       await pssh.connect();
-      sftpStream = await pssh.sftp();
+      let sftpStream = await pssh.sftp();
       sftp = new SftpUtil(sftpStream);
 
       let promises=[]

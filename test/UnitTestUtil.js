@@ -1,21 +1,20 @@
-const fs = require('fs');
 const path = require('path');
 
 // setup test framework
 const chai = require('chai');
-const should = chai.should();
+const {expect} = require('chai');
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
-const sinon = require('sinon');
-const sinonChai = require("sinon-chai");
-chai.use(sinonChai);
+// const sinon = require('sinon');
+// const sinonChai = require("sinon-chai");
+// chai.use(sinonChai);
 
 // testee
 const {isDirLocal, isFileLocal, getSizeLocal} = require('../lib/utils');
 
 // test data
 const {nonExisting, clearLocalTestFiles} = require('./testFiles');
-const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
+const {createLocalFiles, localRoot} = require('./testFiles');
 
 describe('utilty functions in ARssh', function(){
   beforeEach(async function(){
@@ -33,7 +32,7 @@ describe('utilty functions in ARssh', function(){
     ].forEach(function (param){
       it('should return true with dir', function(){
         let rt = isDirLocal(param.arg);
-        return rt.should.become(param.expected)
+        return expect(rt).to.become(param.expected)
       });
     });
   });
@@ -45,7 +44,7 @@ describe('utilty functions in ARssh', function(){
     ].forEach(function (param){
       it('should return true with file', function(){
         let rt = isFileLocal(param.arg);
-        return rt.should.become(param.expected)
+        return expect(rt).to.become(param.expected)
       });
     });
   });
@@ -57,7 +56,7 @@ describe('utilty functions in ARssh', function(){
     ].forEach(function (param){
       it('should return size with file', function(){
         let rt = getSizeLocal(param.arg);
-        return rt.should.become(param.expected)
+        return expect(rt).to.become(param.expected)
       });
     });
   });

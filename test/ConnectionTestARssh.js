@@ -5,7 +5,6 @@ const path = require('path');
 // setup test framework
 const chai = require('chai');
 const {expect} = require('chai');
-const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const sinon = require('sinon');
@@ -22,7 +21,7 @@ const {nonExisting, clearLocalTestFiles, clearRemoteTestFiles} = require('./test
 const {createLocalFiles, localRoot, localEmptyDir, localFiles} = require('./testFiles');
 const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./testFiles');
 
-process.on('unhandledRejection', console.dir);
+//process.on('unhandledRejection', console.dir);
 
 describe.skip('ARsshClient connection test', function(){
   this.timeout(20000);
@@ -32,8 +31,8 @@ describe.skip('ARsshClient connection test', function(){
   before(async function(){
     let pssh = new PsshClient(config);
     await pssh.connect();
-    sftpStream = await pssh.sftp();
-    sftp = new SftpUtil(sftpStream);
+    let sftpStream = await pssh.sftp();
+    let sftp = new SftpUtil(sftpStream);
     let promises=[]
     promises.push(clearRemoteTestFiles(pssh,sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
     promises.push(clearLocalTestFiles().then(createLocalFiles));
@@ -53,8 +52,8 @@ describe.skip('ARsshClient connection test', function(){
   after(async function(){
     let pssh = new PsshClient(config);
     await pssh.connect();
-    sftpStream = await pssh.sftp();
-    sftp = new SftpUtil(sftpStream);
+    let sftpStream = await pssh.sftp();
+    let sftp = new SftpUtil(sftpStream);
     let promises=[]
     promises.push(clearRemoteTestFiles(pssh,sftp));
     promises.push(clearLocalTestFiles());
@@ -146,11 +145,12 @@ describe.skip('ARsshClient connection test', function(){
 
 
   describe('test with file/directory operation', function(){
+    let sftp;
     let pssh;
     beforeEach(async function(){
       pssh = new PsshClient(config);
       await pssh.connect();
-      sftpStream = await pssh.sftp();
+      let sftpStream = await pssh.sftp();
       sftp = new SftpUtil(sftpStream);
       let promises=[]
       promises.push(clearRemoteTestFiles(pssh,sftp).then(createRemoteFiles.bind(null, pssh, sftp)));

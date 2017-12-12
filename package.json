@@ -9,6 +9,7 @@
   "repository": "github:so5/arssh2-client",
   "main": "lib/index.js",
   "scripts": {
+    "lint": "eslint lib/*.js test/*.js",
     "test": "nyc --reporter=html --reporter=text mocha",
     "mocha": "mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
@@ -21,7 +22,10 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.0.0",
+    "del": "^3.0.0",
     "eslint": "^4.11.0",
+    "eslint-plugin-chai-expect": "^1.1.1",
+    "eslint-plugin-node": "^5.2.1",
     "mocha": "^4.0.1",
     "nyc": "^11.3.0",
     "sinon": "^4.1.2",
