@@ -1,10 +1,11 @@
+const {promisify} = require('util');
 const fs = require('fs');
-const util = require('util');
 const path = require('path');
 const del = require('del');
 
 // setup test framework
 const chai = require('chai');
+const {expect} = require('chai');
 const should = chai.should();
 const chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
@@ -18,7 +19,7 @@ let arssh;
 
 // test data
 const {clearLocalTestFiles, createLocalFiles, localRoot, localEmptyDir, localFiles, nonExisting} = require('./testFiles');
-//TODO make connection managers's stub and remove real config
+
 let config = {
   username: "foo",
   hostname: "bar",
@@ -39,22 +40,50 @@ describe('arssh UT', function(){
     arssh.disconnect();
   });
 
-  describe('exec', function(){
-    describe('#exec', function(){
-      this.timeout(0);
-      it('should enqueue exec cmd', function(){
-        return arssh.exec('hoge').should.be.fulfilled;
-      });
-      it('should reject if cmd is not string', async function(){
-        return arssh.exec(1).should.be.rejectedWith('cmd must be string');
-      });
-      it('should enqueue exec cmd', function(){
-        let promises=[];
-        for(let i=0; i< 80; i++){
-          promises.push(arssh.exec('hoge'));
-        }
-        return Promise.all(promises).should.be.fulfilled;
-      });
+  describe('#chnageConfig', function(){
+    it('should change only one property of config', function(){
+      arssh.changeConfig('username', 'hoge');
+
+      expect(arssh.config.username).to.be.equal('hoge');
+      expect(arssh.config.hostname).to.be.equal(config.hostname);
+      expect(arssh.config.passphrase).to.be.equal(config.passphrase);
+      expect(arssh.cm.config.username).to.be.equal('hoge');
+      expect(arssh.cm.config.hostname).to.be.equal(config.hostname);
+      expect(arssh.cm.config.passphrase).to.be.equal(config.passphrase);
+    });
+  });
+  describe('#overwriteConfig', function(){
+    let config2 = {
+      username: "piyo",
+      hostname: "huga",
+      passphrase: "piyo"
+    }
+    it('should change all property of config', function(){
+      arssh.overwriteConfig(config2);
+
+      expect(arssh.config.username).to.be.equal(config2.username);
+      expect(arssh.config.hostname).to.be.equal(config2.hostname);
+      expect(arssh.config.passphrase).to.be.equal(config2.passphrase);
+      expect(arssh.cm.config.username).to.be.equal(config2.username);
+      expect(arssh.cm.config.hostname).to.be.equal(config2.hostname);
+      expect(arssh.cm.config.passphrase).to.be.equal(config2.passphrase);
+    });
+
+  });
+
+  describe('#exec', function(){
+    it('should enqueue exec cmd', function(){
+      return arssh.exec('hoge').should.be.fulfilled;
+    });
+    it('should reject if cmd is not string', async function(){
+      return arssh.exec(1).should.be.rejectedWith('cmd must be string');
+    });
+    it('should enqueue exec cmd', function(){
+      let promises=[];
+      for(let i=0; i< 80; i++){
+        promises.push(arssh.exec('hoge'));
+      }
+      return Promise.all(promises).should.be.fulfilled;
     });
   });
 
