@@ -24,7 +24,7 @@ const {createRemoteFiles, remoteRoot,remoteEmptyDir,remoteFiles} = require('./te
 
 process.on('unhandledRejection', console.dir);
 
-describe('ARsshClient connection test', function(){
+describe.skip('ARsshClient connection test', function(){
   this.timeout(20000);
   let arssh;
   let sshout=sinon.stub();
