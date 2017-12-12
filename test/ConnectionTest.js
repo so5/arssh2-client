@@ -40,6 +40,13 @@ describe.skip('connection test', function(){
       ssherr.reset();
     });
 
+    describe('#canConnect', function(){
+      this.timeout(4000);
+      it('should return true', function(){
+        let rt = arssh.canConnect();
+        return expect(rt).to.become(true);
+      });
+    });
     describe('#exec', function(){
       this.timeout(4000);
       let testText = 'hoge';
