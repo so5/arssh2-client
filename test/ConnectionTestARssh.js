@@ -138,7 +138,7 @@ describe.skip('ARsshClient connection test', function(){
     ].forEach(function(param){
       it('should return array of filenames', function(){
         let rt = arssh.ls( param.args);
-        return rt.should.eventually.have.members(param.expected);
+        return expect(rt).to.eventually.have.members(param.expected);
       });
     });
   });
@@ -168,21 +168,21 @@ describe.skip('ARsshClient connection test', function(){
     describe('#mkdir_p', function(){
       it('should make child of existing directory', function(){
         let rt=arssh.mkdir_p(remoteRoot+'/hogehoge');
-        return rt.should.become(undefined);
+        return expect(rt).to.become(undefined);
       });
       it('should make child dir of non-existing directory with trailing pathsep', function(){
         let tmpDirname=`${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga/`;
         let rt=arssh.mkdir_p(tmpDirname);
-        return rt.should.become(undefined);
+        return expect(rt).to.become(undefined);
       });
       it('should make child dir of non-existing directory', function(){
         let tmpDirname=`${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga`;
         let rt=arssh.mkdir_p(tmpDirname);
-        return rt.should.become(undefined);
+        return expect(rt).to.become(undefined);
       });
       it('should resolve with undefined if making existing directory', function(){
         let rt=arssh.mkdir_p(remoteRoot);
-        return rt.should.become(undefined);
+        return expect(rt).to.become(undefined);
       });
       it('should rejected if target path is existing file', function(){
         let rt=arssh.mkdir_p(remoteFiles[0]);
@@ -198,11 +198,20 @@ describe.skip('ARsshClient connection test', function(){
         {src: localFiles[0], dst: path.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
       ].forEach(function(param){
         it('should send single file to server', async function(){
-          await arssh.send(param.src, param.dst)
+          await arssh.send(param.src, param.dst);
 
           let rt = await sftp.ls(param.dst);
           expect(rt).to.have.members(param.expected);
         });
+      });
+      it('should send single file to server with keep file permission', async function(){
+        let perm='633';
+        await promisify(fs.chmod)(localFiles[0], perm);
+        await arssh.send(localFiles[0], remoteEmptyDir);
+
+        let rt = await sftp.stat(path.posix.join(remoteEmptyDir, 'foo'));
+        let permission = (rt.mode & parseInt(777,8)).toString(8);
+        expect(permission).to.be.equal(perm);
       });
       it('should send directory tree to server', async function(){
         await arssh.send(localRoot, remoteEmptyDir);
@@ -211,6 +220,19 @@ describe.skip('ARsshClient connection test', function(){
         expect(rt).to.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
         let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
         expect(rt2).to.have.members(['piyo', 'puyo', 'poyo']);
+      });
+      it('should send directory tree to server with keep file permission', async function(){
+        let perm='633';
+        await promisify(fs.chmod)(localFiles[0], perm);
+        await arssh.send(localRoot, remoteEmptyDir);
+
+        let rt = await sftp.ls(remoteEmptyDir);
+        expect(rt).to.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
+        let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
+        expect(rt2).to.have.members(['piyo', 'puyo', 'poyo']);
+        let rt3 = await sftp.stat(path.posix.join(remoteEmptyDir, 'foo'));
+        let permission = (rt3.mode & parseInt(777,8)).toString(8);
+        expect(permission).to.be.equal(perm);
       });
     });
 
