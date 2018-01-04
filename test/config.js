@@ -2,9 +2,7 @@ const fs = require('fs');
 let config={};
 
 try{
-  const configs = require('./ARsshTestSettings.json');
-  const configNo = 1;
-  config = configs[configNo];
+  config = require('./ARsshTestSettings.json');
   if(! config.hasOwnProperty('privateKey')){
     const keyFile = `${process.env.HOME}/.ssh/id_rsa`;
     config.privateKey = fs.readFileSync(keyFile).toString();
