@@ -1,18 +1,19 @@
 const fs = require('fs');
+const path = require('path');
 const {promisify} = require('util');
 
 const del = require('del');
 
 
 let localRoot = 'ARssh_testLocalDir'
-let localEmptyDir = `${localRoot}/huga`
+let localEmptyDir = path.join(localRoot,'huga');
 let localFiles=[
-  `${localRoot}/foo`,
-  `${localRoot}/bar`,
-  `${localRoot}/baz`,
-  `${localRoot}/hoge/piyo`,
-  `${localRoot}/hoge/puyo`,
-  `${localRoot}/hoge/poyo`,
+  path.join(localRoot,'foo'),
+  path.join(localRoot,'bar'),
+  path.join(localRoot,'baz'),
+  path.join(localRoot,'hoge','piyo'),
+  path.join(localRoot,'hoge','puyo'),
+  path.join(localRoot,'hoge','poyo'),
 ];
 
 let remoteRoot = 'ARssh_testRemoteDir'
@@ -31,7 +32,7 @@ let nonExisting='ARSSH_nonExisting'
  * prepare local files which contain its filename
  */
 let createLocalFiles = async ()=>{
-  let localDir2 = `${localRoot}/hoge`
+  let localDir2 = path.join(localRoot,'hoge');
   let promises=[]
   await promisify(fs.mkdir)(localRoot);
   await promisify(fs.mkdir)(localDir2);

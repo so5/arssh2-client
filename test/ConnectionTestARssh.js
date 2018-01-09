@@ -115,16 +115,18 @@ describe.skip('ARsshClient connection test', function(){
   });
 
   describe('#realpath', function(){
-    let remoteHome = '/volume2/home/aics-hud/a05013/';
-    it('should return absolute path of existing directory', function(){
+    it('should return absolute path of existing directory', async function(){
+      let remoteHome = await arssh.realpath('.');
       let rt=arssh.realpath(remoteRoot);
       return expect(rt).to.become(path.posix.join(remoteHome, remoteRoot));
     });
-    it('should return absolute path of existing file', function(){
+    it('should return absolute path of existing file', async function(){
+      let remoteHome = await arssh.realpath('.');
       let rt=arssh.realpath(remoteFiles[0]);
       return expect(rt).to.become(path.posix.join(remoteHome, remoteFiles[0]));
     });
-    it('should return absolute path of not-existing file', function(){
+    it('should return absolute path of not-existing file', async function(){
+      let remoteHome = await arssh.realpath('.');
       let rt=arssh.realpath(path.posix.join(remoteRoot, nonExisting));
       return expect(rt).to.become(path.posix.join(remoteHome, remoteRoot, nonExisting));
     });
@@ -165,6 +167,16 @@ describe.skip('ARsshClient connection test', function(){
       pssh.disconnect();
     });
 
+    describe('#chmod', function(){
+      it('should change file mode', async function(){
+        await arssh.chmod(remoteFiles[0], '700');
+        let tmp = await sftp.readdir(remoteRoot);
+        let tmp2 = tmp.find((e)=>{
+          return e.filename === path.posix.basename(remoteFiles[0]);
+        });
+        expect(tmp2.longname.startsWith('-rwx------ ')).to.be.true;
+      });
+    });
     describe('#mkdir_p', function(){
       it('should make child of existing directory', function(){
         let rt=arssh.mkdir_p(remoteRoot+'/hogehoge');
@@ -195,7 +207,7 @@ describe.skip('ARsshClient connection test', function(){
     describe('#send', function(){
       [
         {src: localFiles[0], dst: remoteEmptyDir, expected: ['foo']},
-        {src: localFiles[0], dst: path.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
+        {src: localFiles[0], dst: path.posix.join(remoteEmptyDir,'hoge'), expected: ['hoge']},
       ].forEach(function(param){
         it('should send single file to server', async function(){
           await arssh.send(param.src, param.dst);
@@ -204,7 +216,7 @@ describe.skip('ARsshClient connection test', function(){
           expect(rt).to.have.members(param.expected);
         });
       });
-      it('should send single file to server with keep file permission', async function(){
+      it.skip('should send single file to server with keep file permission(can not work on windows)', async function(){
         let perm='633';
         await promisify(fs.chmod)(localFiles[0], perm);
         await arssh.send(localFiles[0], remoteEmptyDir);
@@ -218,17 +230,17 @@ describe.skip('ARsshClient connection test', function(){
 
         let rt = await sftp.ls(remoteEmptyDir);
         expect(rt).to.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
-        let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
+        let rt2 = await sftp.ls(path.posix.join(remoteEmptyDir, 'hoge'));
         expect(rt2).to.have.members(['piyo', 'puyo', 'poyo']);
       });
-      it('should send directory tree to server with keep file permission', async function(){
+      it.skip('should send directory tree to server with keep file permission(can not work on windows)', async function(){
         let perm='633';
         await promisify(fs.chmod)(localFiles[0], perm);
         await arssh.send(localRoot, remoteEmptyDir);
 
         let rt = await sftp.ls(remoteEmptyDir);
         expect(rt).to.have.members(['foo', 'bar', 'baz', 'hoge', 'huga']);
-        let rt2 = await sftp.ls(path.join(remoteEmptyDir, 'hoge'));
+        let rt2 = await sftp.ls(path.posix.join(remoteEmptyDir, 'hoge'));
         expect(rt2).to.have.members(['piyo', 'puyo', 'poyo']);
         let rt3 = await sftp.stat(path.posix.join(remoteEmptyDir, 'foo'));
         let permission = (rt3.mode & parseInt(777,8)).toString(8);
