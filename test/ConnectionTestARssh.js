@@ -62,9 +62,16 @@ describe.skip('ARsshClient connection test', function(){
   });
 
   describe('#canConnect', function(){
-    it('should return true', function(){
+    it('should return true with correct setting', function(){
       let rt = arssh.canConnect();
       return expect(rt).to.become(true);
+    });
+    it('should return false with wrong setting', function(){
+      let config2 = Object.assign({}, config);
+      config2.username='xxxxx';
+      let arssh2 = new ARsshClient(config2, {delay: 1000, connectionRetryDelay: 100});
+      let rt = arssh2.canConnect();
+      return expect(rt).to.become(false);
     });
   });
 
