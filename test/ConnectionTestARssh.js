@@ -77,7 +77,7 @@ describe.skip('ARsshClient connection test', function(){
 
   describe('#exec', function(){
     let testText = 'hoge';
-    let numExec = 20;
+    let numExec = 50;
 
     it('single command with stdout', async function(){
       let rt=await arssh.exec(`echo ${testText}`);
@@ -94,13 +94,41 @@ describe.skip('ARsshClient connection test', function(){
       expect(ssherr).to.be.calledWith(Buffer.from(testText+'\n'));
     });
     it(`${numExec} times command execution after 1sec sleep`,async function(){
+      this.timeout(0);
       let promises=[];
       for(let i=0; i< numExec; i++){
         promises.push(arssh.exec(`sleep 1&& echo ${testText} ${i}`));
       }
       let rt=await Promise.all(promises);
 
-      // check return value
+      // check if all return value is 0
+      expect(rt).to.have.lengthOf(numExec);
+      rt=Array.from(new Set(rt));
+      expect(rt).to.have.lengthOf(1);
+      expect(rt).to.include(0);
+
+      // check output of ssh
+      expect(ssherr).not.to.be.called;
+      expect(sshout.args).to.have.lengthOf(numExec);
+      let results=sshout.args.map((e)=>{
+        return e[0].toString();
+      });
+
+      let expectedResults=[]
+      for(let i=0; i< numExec; i++){
+        expectedResults.push(`${testText} ${i}`+'\n');
+      }
+      expect(results).to.have.members(expectedResults);
+    });
+    it.skip(`${numExec} times command execution after 10sec sleep`,async function(){
+      this.timeout(0);
+      let promises=[];
+      for(let i=0; i< numExec; i++){
+        promises.push(arssh.exec(`sleep 10&& echo ${testText} ${i}`));
+      }
+      let rt=await Promise.all(promises);
+
+      // check if all return value is 0
       expect(rt).to.have.lengthOf(numExec);
       rt=Array.from(new Set(rt));
       expect(rt).to.have.lengthOf(1);
