@@ -51,22 +51,22 @@ describe.skip('connection test', function(){
       it.skip('should be rejected if signal intrupted', function(){
       });
       it('should return zero without error', function(){
-        return expect(pssh.exec('hostname')).to.become(0);
+        return expect(pssh.exec('hostname'),{}).to.become(0);
       });
       it('should return non-zero value with error', function(){
-        return expect(pssh.exec('ls hoge')).to.not.become(0);
+        return expect(pssh.exec('ls hoge'),{}).to.not.become(0);
       });
       it('should fire stdout event if command produce output to stdout', function(){
         pssh.once('stdout',(data)=>{
           expect(data.toString()).to.equal(testText+'\n');
         });
-        return expect(pssh.exec(`echo ${testText}`)).to.become(0);
+        return expect(pssh.exec(`echo ${testText}`),{}).to.become(0);
       });
       it('should fire stderr event if command produce output to stderr', function(){
         pssh.once('stderr',(data)=>{
           expect(data.toString()).to.equal(testText+'\n');
         });
-        return expect(pssh.exec(`echo ${testText} >&2`)).to.become(0);
+        return expect(pssh.exec(`echo ${testText} >&2`),{}).to.become(0);
       });
     });
   });

@@ -53,12 +53,12 @@ let createRemoteFiles = async (ssh, sftp)=>{
   remoteFiles.forEach(async (remoteFile)=>{
     script += `echo ${remoteFile} > ${remoteFile};`
   });
-  promises.push(ssh.exec(script));
+  promises.push(ssh.exec(script, {}));
   return Promise.all(promises);
 }
 
 let clearRemoteTestFiles = async (ssh)=>{
-  return ssh.exec(`rm -fr ${remoteRoot}`);
+  return ssh.exec(`rm -fr ${remoteRoot}`, {});
 }
 let clearLocalTestFiles = async ()=>{
   return del(localRoot);
