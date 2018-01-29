@@ -80,13 +80,46 @@ describe.skip("ARsshClient connection test", function() {
   });
 
   describe("#canConnect", function() {
+    this.timeout(100000);
     it("should be resolved with true", function() {
       let rt = arssh.canConnect();
       return expect(rt).to.become(true);
     });
-    it("should be rejected if connection failed", function() {
+    it("should be rejected if connection failed(non-existing user)", function() {
       let config2 = Object.assign({}, config);
       config2.username = "xxxxx";
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if connection failed(illegal password)", function() {
+      let config2 = Object.assign({}, config);
+      config2.password = "";
+      config2.passphrase = undefined;
+      config2.privateKey = undefined;
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if connection failed(non-existing host)", function() {
+      let config2 = Object.assign({}, config);
+      config2.hostname = "foo.bar.example.com";
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if connection failed(non-existing ip address)", function() {
+      let config2 = Object.assign({}, config);
+      config2.hostname = "192.0.2.1";
       let arssh2 = new ARsshClient(config2, {
         delay: 1000,
         connectionRetryDelay: 100
@@ -141,7 +174,7 @@ describe.skip("ARsshClient connection test", function() {
       }
       expect(results).to.have.members(expectedResults);
     });
-    it(`${numExec} times command execution after 10sec sleep`, async function() {
+    it.skip(`${numExec} times command execution after 10sec sleep`, async function() {
       this.timeout(0);
       let promises = [];
       for (let i = 0; i < numExec; i++) {
