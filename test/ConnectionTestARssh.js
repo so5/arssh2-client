@@ -141,7 +141,7 @@ describe.skip("ARsshClient connection test", function() {
       }
       expect(results).to.have.members(expectedResults);
     });
-    it.skip(`${numExec} times command execution after 10sec sleep`, async function() {
+    it(`${numExec} times command execution after 10sec sleep`, async function() {
       this.timeout(0);
       let promises = [];
       for (let i = 0; i < numExec; i++) {
@@ -265,20 +265,26 @@ describe.skip("ARsshClient connection test", function() {
     });
 
     describe("#send", function() {
-      [
-        { src: localFiles[0], dst: remoteEmptyDir, expected: ["foo"] },
-        {
-          src: localFiles[0],
-          dst: path.posix.join(remoteEmptyDir, "hoge"),
-          expected: ["hoge"]
-        }
-      ].forEach(function(param) {
-        it("should send single file to server", async function() {
-          await arssh.send(param.src, param.dst);
+      it("should send single file to server", async function() {
+        await arssh.send(localFiles[0], remoteEmptyDir);
 
-          let rt = await sftp.ls(param.dst);
-          expect(rt).to.have.members(param.expected);
-        });
+        let rt = await sftp.ls(remoteEmptyDir);
+        expect(rt).to.have.members(["foo"]);
+      });
+      it("should send single file to server", async function() {
+        await arssh.send(localFiles[3], remoteEmptyDir);
+
+        let rt = await sftp.ls(remoteEmptyDir);
+        expect(rt).to.have.members(["piyo"]);
+      });
+      it("should send single file to server and rename", async function() {
+        await arssh.send(
+          localFiles[0],
+          path.posix.join(remoteEmptyDir, "hoge")
+        );
+
+        let rt = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
+        expect(rt).to.have.members(["hoge"]);
       });
       it.skip("should send single file to server with keep file permission(can not work on windows)", async function() {
         let perm = "633";
@@ -297,6 +303,12 @@ describe.skip("ARsshClient connection test", function() {
         let rt2 = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
         expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
       });
+      it("should send directory tree to server", async function() {
+        await arssh.send(path.resolve(localRoot, "hoge"), remoteEmptyDir);
+
+        let rt = await sftp.ls(path.posix.join(remoteEmptyDir));
+        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
       it.skip("should send directory tree to server with keep file permission(can not work on windows)", async function() {
         let perm = "633";
         await promisify(fs.chmod)(localFiles[0], perm);
@@ -314,12 +326,12 @@ describe.skip("ARsshClient connection test", function() {
 
     describe("#recv", function() {
       it("should get single file into specific dir", async function() {
-        await arssh.recv(remoteFiles[0], localEmptyDir);
+        await arssh.recv(remoteFiles[3], localEmptyDir);
 
         let rt = await promisify(fs.readdir)(localEmptyDir);
-        expect(rt).to.have.members(["foo"]);
+        expect(rt).to.have.members(["piyo"]);
       });
-      it("should get single file from server with different rename", async function() {
+      it("should get single file from server with different name", async function() {
         await arssh.recv(remoteFiles[0], path.join(localEmptyDir, "hoge"));
 
         let rt = await promisify(fs.readdir)(localEmptyDir);
@@ -331,6 +343,12 @@ describe.skip("ARsshClient connection test", function() {
         let rt = await promisify(fs.readdir)(localEmptyDir);
         expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
         rt = await promisify(fs.readdir)(path.join(localEmptyDir, "hoge"));
+        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
+      it("should recv directory tree from server", async function() {
+        await arssh.recv(path.posix.join(remoteRoot, "hoge"), localEmptyDir);
+
+        rt = await promisify(fs.readdir)(path.join(localEmptyDir));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
     });
