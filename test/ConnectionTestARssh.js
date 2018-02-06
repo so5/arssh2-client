@@ -85,7 +85,7 @@ describe.skip("ARsshClient connection test", function() {
       let rt = arssh.canConnect();
       return expect(rt).to.become(true);
     });
-    it("should be rejected if connection failed(non-existing user)", function() {
+    it("should be rejected if user does not exist", function() {
       let config2 = Object.assign({}, config);
       config2.username = "xxxxx";
       let arssh2 = new ARsshClient(config2, {
@@ -95,7 +95,17 @@ describe.skip("ARsshClient connection test", function() {
       let rt = arssh2.canConnect();
       return expect(rt).to.be.rejected;
     });
-    it("should be rejected if connection failed(illegal password)", function() {
+    it("should be rejected if user is undefined", function() {
+      let config2 = Object.assign({}, config);
+      config2.username = undefined;
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if password is wrong", function() {
       let config2 = Object.assign({}, config);
       config2.password = "";
       config2.passphrase = undefined;
@@ -107,7 +117,7 @@ describe.skip("ARsshClient connection test", function() {
       let rt = arssh2.canConnect();
       return expect(rt).to.be.rejected;
     });
-    it("should be rejected if connection failed(non-existing host)", function() {
+    it("should be rejected if host does not exist", function() {
       let config2 = Object.assign({}, config);
       config2.hostname = "foo.bar.example.com";
       let arssh2 = new ARsshClient(config2, {
@@ -117,9 +127,29 @@ describe.skip("ARsshClient connection test", function() {
       let rt = arssh2.canConnect();
       return expect(rt).to.be.rejected;
     });
-    it("should be rejected if connection failed(non-existing ip address)", function() {
+    it("should be rejected if host(ip address) does not exist", function() {
       let config2 = Object.assign({}, config);
       config2.hostname = "192.0.2.1";
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if port number is out of range(-1)", function() {
+      let config2 = Object.assign({}, config);
+      config2.port= -1;
+      let arssh2 = new ARsshClient(config2, {
+        delay: 1000,
+        connectionRetryDelay: 100
+      });
+      let rt = arssh2.canConnect();
+      return expect(rt).to.be.rejected;
+    });
+    it("should be rejected if port number is out of range(65536)", function() {
+      let config2 = Object.assign({}, config);
+      config2.port= 65536;
       let arssh2 = new ARsshClient(config2, {
         delay: 1000,
         connectionRetryDelay: 100
