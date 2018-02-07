@@ -14,7 +14,7 @@
     "mocha-v": "cross-env DEBUG=arssh2:* mocha",
     "mocha-vv": "cross-env DEBUG=arssh2:*,ssh2:* mocha",
     "mocha-vvv": "cross-env DEBUG=* mocha",
-    "check": "run-s format test",
+    "check": "run-s format lint test",
     "lint": "eslint lib/*.js test/*.js",
     "test": "nyc --reporter=html --reporter=text mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
