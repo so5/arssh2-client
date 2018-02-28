@@ -372,7 +372,7 @@ describe.skip("ARsshClient connection test", function() {
         await arssh.send(localRoot, remoteEmptyDir);
 
         let rt = await sftp.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
         let rt2 = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
         expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
       });
@@ -395,6 +395,33 @@ describe.skip("ARsshClient connection test", function() {
         let permission = (rt3.mode & parseInt(777, 8)).toString(8);
         expect(permission).to.be.equal(perm);
       });
+      it("should send directory tree to server if only filter matched", async function() {
+        await arssh.send(localRoot, remoteEmptyDir, "*/{ba*,hoge/*}");
+
+        let rt = await sftp.ls(path.posix.join(remoteEmptyDir));
+        expect(rt).to.have.members(["hoge", "bar", "baz"]);
+        rt = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
+        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
+      it("should send directory tree to server if exclude filter not matched", async function() {
+        await arssh.send(localRoot, remoteEmptyDir, null, "*/{ba*,hoge*}");
+
+        let rt = await sftp.ls(path.posix.join(remoteEmptyDir));
+        expect(rt).to.have.members(["foo", "hoge"]);
+      });
+      it("should send directory tree to server if only filter matched but exclude filter not matched", async function() {
+        await arssh.send(
+          localRoot,
+          remoteEmptyDir,
+          "*/{ba*,hoge/*}",
+          "**/poyo"
+        );
+
+        let rt = await sftp.ls(path.posix.join(remoteEmptyDir));
+        expect(rt).to.have.members(["hoge", "bar", "baz"]);
+        rt = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
+        expect(rt).to.have.members(["piyo", "puyo"]);
+      });
     });
 
     describe("#recv", function() {
@@ -414,7 +441,7 @@ describe.skip("ARsshClient connection test", function() {
         await arssh.recv(remoteRoot, localEmptyDir);
 
         let rt = await promisify(fs.readdir)(localEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
         rt = await promisify(fs.readdir)(path.join(localEmptyDir, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
@@ -423,6 +450,30 @@ describe.skip("ARsshClient connection test", function() {
 
         const rt = await promisify(fs.readdir)(path.join(localEmptyDir));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
+      it("should recv files which matches only filter", async function() {
+        await arssh.recv(remoteRoot, localEmptyDir, "*/{ba*,hoge/*}");
+        let rt = await promisify(fs.readdir)(path.join(localEmptyDir));
+        expect(rt).to.have.members(["bar", "baz", "hoge"]);
+        rt = await promisify(fs.readdir)(path.join(localEmptyDir, "hoge"));
+        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
+      it("should not recv files which matches exclude filter", async function() {
+        await arssh.recv(remoteRoot, localEmptyDir, null, "*/{ba*,hoge/*}");
+        let rt = await promisify(fs.readdir)(path.join(localEmptyDir));
+        expect(rt).to.have.members(["foo", "hoge"]);
+      });
+      it("should recv files which matches only filter but should not recv which matches exclude filter", async function() {
+        await arssh.recv(
+          remoteRoot,
+          localEmptyDir,
+          "*/{ba*,hoge/*}",
+          "**/piyo"
+        );
+        let rt = await promisify(fs.readdir)(path.join(localEmptyDir));
+        expect(rt).to.have.members(["bar", "baz", "hoge"]);
+        rt = await promisify(fs.readdir)(path.join(localEmptyDir, "hoge"));
+        expect(rt).to.have.members(["puyo", "poyo"]);
       });
     });
   });
