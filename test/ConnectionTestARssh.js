@@ -183,21 +183,25 @@ describe.skip("ARsshClient connection test", function() {
     let testText = "hoge";
     let numExec = 50;
 
-    it("single command with stdout", async function() {
-      let rt = await arssh.exec(`echo ${testText}`);
+    it("should execute single command with stdout", async function() {
+      const stdout = [];
+      let rt = await arssh.exec(`echo ${testText}`, {}, stdout);
       expect(rt).to.equal(0);
       expect(sshout).to.be.calledOnce;
       expect(sshout).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(ssherr).not.to.be.called;
+      expect(stdout).to.have.members(["hoge\n"]);
     });
-    it("single command with stderr", async function() {
-      let rt = await arssh.exec(`echo ${testText} >&2`);
+    it("should execute single command with stderr", async function() {
+      const stderr = [];
+      let rt = await arssh.exec(`echo ${testText} >&2`, {}, null, stderr);
       expect(rt).to.equal(0);
       expect(sshout).not.to.be.called;
       expect(ssherr).to.be.calledOnce;
       expect(ssherr).to.be.calledWith(Buffer.from(testText + "\n"));
+      expect(stderr).to.have.members(["hoge\n"]);
     });
-    it(`${numExec} times command execution after 1sec sleep`, async function() {
+    it(`should execute ${numExec} times after 1sec sleep`, async function() {
       this.timeout(0);
       let promises = [];
       for (let i = 0; i < numExec; i++) {
