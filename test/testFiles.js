@@ -36,7 +36,7 @@ let createLocalFiles = async () => {
   await promisify(fs.mkdir)(localRoot);
   await promisify(fs.mkdir)(localDir2);
   promises.push(promisify(fs.mkdir)(localEmptyDir));
-  localFiles.forEach(localFile => {
+  localFiles.forEach((localFile) => {
     promises.push(promisify(fs.writeFile)(localFile, localFile + "\n"));
   });
   return Promise.all(promises);
@@ -49,14 +49,14 @@ let createRemoteFiles = async (ssh, sftp) => {
   await sftp.mkdir_p(`${remoteDir2}`);
   promises.push(sftp.mkdir_p(`${remoteEmptyDir}`));
   let script = "";
-  remoteFiles.forEach(async remoteFile => {
+  remoteFiles.forEach(async (remoteFile) => {
     script += `echo ${remoteFile} > ${remoteFile};`;
   });
   promises.push(ssh.exec(script, {}));
   return Promise.all(promises);
 };
 
-let clearRemoteTestFiles = async ssh => {
+let clearRemoteTestFiles = async (ssh) => {
   return ssh.exec(`rm -fr ${remoteRoot}`, {});
 };
 let clearLocalTestFiles = async () => {

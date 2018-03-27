@@ -12,13 +12,7 @@ const ARsshClient = require("../lib/index.js");
 let arssh;
 
 // test data
-const {
-  clearLocalTestFiles,
-  createLocalFiles,
-  localEmptyDir,
-  localFiles,
-  nonExisting
-} = require("./testFiles");
+const { clearLocalTestFiles, createLocalFiles, localEmptyDir, localFiles, nonExisting } = require("./testFiles");
 
 let config = {
   username: "foo",
@@ -101,19 +95,13 @@ describe("arssh UT", function() {
         return expect(arssh.send(localEmptyDir, "hoge")).to.be.fulfilled;
       });
       it("should reject if src is not existing", async function() {
-        return expect(arssh.send(nonExisting, "hoge")).to.be.rejectedWith(
-          "src must be existing file or directory"
-        );
+        return expect(arssh.send(nonExisting, "hoge")).to.be.rejectedWith("src must be existing file or directory");
       });
       it("should reject if src is not string", async function() {
-        return expect(arssh.send(1, "hoge")).to.be.rejectedWith(
-          "path must be a string or Buffer"
-        );
+        return expect(arssh.send(1, "hoge")).to.be.rejectedWith("path must be a string or Buffer");
       });
       it("should reject if dst is not string", async function() {
-        return expect(arssh.send(localFiles[0], 2)).to.be.rejectedWith(
-          "dst must be string"
-        );
+        return expect(arssh.send(localFiles[0], 2)).to.be.rejectedWith("dst must be string");
       });
     });
 
@@ -122,19 +110,13 @@ describe("arssh UT", function() {
         return expect(arssh.recv("hoge", "hoge")).to.be.fulfilled;
       });
       it("should reject if dst is existing file", async function() {
-        return expect(arssh.recv("hoge", localFiles[0])).to.be.rejectedWith(
-          "dst must not be existing file"
-        );
+        return expect(arssh.recv("hoge", localFiles[0])).to.be.rejectedWith("dst must not be existing file");
       });
       it("should reject if dst is not string", async function() {
-        return expect(arssh.recv("hoge", 1)).to.be.rejectedWith(
-          "path must be a string or Buffer"
-        );
+        return expect(arssh.recv("hoge", 1)).to.be.rejectedWith("path must be a string or Buffer");
       });
       it("should reject if src is not string", async function() {
-        return expect(arssh.recv(1, "hoge")).to.be.rejectedWith(
-          "src must be string"
-        );
+        return expect(arssh.recv(1, "hoge")).to.be.rejectedWith("src must be string");
       });
     });
   });

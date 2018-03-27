@@ -47,7 +47,7 @@ const {
 
 //process.on("unhandledRejection", console.dir);
 
-describe.skip("ARsshClient connection test", function() {
+describe("ARsshClient connection test", function() {
   this.timeout(20000);
   let arssh;
   let sshout = sinon.stub();
@@ -58,11 +58,7 @@ describe.skip("ARsshClient connection test", function() {
     let sftpStream = await pssh.sftp();
     let sftp = new SftpUtil(sftpStream);
     let promises = [];
-    promises.push(
-      clearRemoteTestFiles(pssh, sftp).then(
-        createRemoteFiles.bind(null, pssh, sftp)
-      )
-    );
+    promises.push(clearRemoteTestFiles(pssh, sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
     promises.push(clearLocalTestFiles().then(createLocalFiles));
     await Promise.all(promises);
     pssh.disconnect();
@@ -91,91 +87,102 @@ describe.skip("ARsshClient connection test", function() {
 
   describe("#canConnect", function() {
     this.timeout(100000);
-    it("should be resolved with true", function() {
-      let rt = arssh.canConnect();
-      return expect(rt).to.become(true);
+    it("should be resolved with true", async function() {
+      expect(await arssh.canConnect()).to.be.true;
     });
-    it("should be rejected if user does not exist", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if user does not exist", async function() {
+      const config2 = Object.assign({}, config);
       config2.username = "xxxxx";
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
+      const arssh2 = new ARsshClient(config2, {
         connectionRetryDelay: 100
       });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("authentication failure");
+        });
     });
-    it("should be rejected if user is undefined", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if user is undefined", async function() {
+      const config2 = Object.assign({}, config);
       config2.username = undefined;
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("invalid username");
+        });
     });
-    it("should be rejected if password is wrong", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if password is wrong", async function() {
+      const config2 = Object.assign({}, config);
       config2.password = "";
       config2.passphrase = undefined;
       config2.privateKey = undefined;
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      let arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("authentication failure");
+        });
     });
-    it("should be rejected if privateKey is wrong", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if privateKey is wrong", async function() {
+      const config2 = Object.assign({}, config);
       config2.privateKey = "xxx";
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("invalid private key");
+        });
     });
-    it("should be rejected if host does not exist", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if host does not exist", async function() {
+      const config2 = Object.assign({}, config);
       config2.hostname = "foo.bar.example.com";
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("name resolution failure");
+        });
     });
-    it("should be rejected if host(ip address) does not exist", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if host(ip address) does not exist", async function() {
+      this.timeout(0);
+      const config2 = Object.assign({}, config);
       config2.hostname = "192.0.2.1";
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      config2.readyTimeout = 200;
+      const arssh2 = new ARsshClient(config2, { connectionRetry: 1, connectionRetryDelay: 10 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("timeout occurred during connection process");
+        });
     });
-    it("should be rejected if port number is out of range(-1)", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if port number is out of range(-1)", async function() {
+      const config2 = Object.assign({}, config);
       config2.port = -1;
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("illegal port number");
+        });
     });
-    it("should be rejected if port number is out of range(65536)", function() {
-      let config2 = Object.assign({}, config);
+    it("should be rejected if port number is out of range(65536)", async function() {
+      const config2 = Object.assign({}, config);
       config2.port = 65536;
-      let arssh2 = new ARsshClient(config2, {
-        delay: 1000,
-        connectionRetryDelay: 100
-      });
-      let rt = arssh2.canConnect();
-      return expect(rt).to.be.rejected;
+      const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
+      await arssh2
+        .canConnect()
+        .then(expect.fail)
+        .catch((err) => {
+          expect(err.reason).to.equal("illegal port number");
+        });
     });
   });
 
@@ -210,7 +217,6 @@ describe.skip("ARsshClient connection test", function() {
       expect(sshout).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(ssherr).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(output).to.have.members(["hoge\n", "hoge\n"]);
-      console.log(output);
     });
     it(`should execute ${numExec} times after 1sec sleep`, async function() {
       this.timeout(0);
@@ -229,7 +235,7 @@ describe.skip("ARsshClient connection test", function() {
       // check output of ssh
       expect(ssherr).not.to.be.called;
       expect(sshout.args).to.have.lengthOf(numExec);
-      let results = sshout.args.map(e => {
+      let results = sshout.args.map((e) => {
         return e[0].toString();
       });
 
@@ -256,7 +262,7 @@ describe.skip("ARsshClient connection test", function() {
       // check output of ssh
       expect(ssherr).not.to.be.called;
       expect(sshout.args).to.have.lengthOf(numExec);
-      let results = sshout.args.map(e => {
+      let results = sshout.args.map((e) => {
         return e[0].toString();
       });
 
@@ -282,9 +288,7 @@ describe.skip("ARsshClient connection test", function() {
     it("should return absolute path of not-existing file", async function() {
       let remoteHome = await arssh.realpath(".");
       let rt = arssh.realpath(path.posix.join(remoteRoot, nonExisting));
-      return expect(rt).to.become(
-        path.posix.join(remoteHome, remoteRoot, nonExisting)
-      );
+      return expect(rt).to.become(path.posix.join(remoteHome, remoteRoot, nonExisting));
     });
   });
 
@@ -312,11 +316,7 @@ describe.skip("ARsshClient connection test", function() {
       let sftpStream = await pssh.sftp();
       sftp = new SftpUtil(sftpStream);
       let promises = [];
-      promises.push(
-        clearRemoteTestFiles(pssh, sftp).then(
-          createRemoteFiles.bind(null, pssh, sftp)
-        )
-      );
+      promises.push(clearRemoteTestFiles(pssh, sftp).then(createRemoteFiles.bind(null, pssh, sftp)));
       promises.push(clearLocalTestFiles().then(createLocalFiles));
       await Promise.all(promises);
     });
@@ -332,7 +332,7 @@ describe.skip("ARsshClient connection test", function() {
       it("should change file mode", async function() {
         await arssh.chmod(remoteFiles[0], "700");
         let tmp = await sftp.readdir(remoteRoot);
-        let tmp2 = tmp.find(e => {
+        let tmp2 = tmp.find((e) => {
           return e.filename === path.posix.basename(remoteFiles[0]);
         });
         expect(tmp2.longname.startsWith("-rwx------ ")).to.be.true;
@@ -388,10 +388,7 @@ describe.skip("ARsshClient connection test", function() {
         expect(rt).to.have.members(["piyo"]);
       });
       it("should send single file to server and rename", async function() {
-        await arssh.send(
-          localFiles[0],
-          path.posix.join(remoteEmptyDir, "hoge")
-        );
+        await arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, "hoge"));
 
         let rt = await sftp.ls(path.posix.join(remoteEmptyDir, "hoge"));
         expect(rt).to.have.members(["hoge"]);
@@ -451,12 +448,7 @@ describe.skip("ARsshClient connection test", function() {
         expect(rt).to.have.members(["foo", "hoge", "huga"]);
       });
       it("should send directory tree to server if only filter matched but exclude filter not matched", async function() {
-        await arssh.send(
-          localRoot,
-          remoteEmptyDir,
-          "*/{ba*,hoge/*}",
-          "**/poyo"
-        );
+        await arssh.send(localRoot, remoteEmptyDir, "*/{ba*,hoge/*}", "**/poyo");
 
         let rt = await sftp.ls(path.posix.join(remoteEmptyDir));
         expect(rt).to.have.members(["hoge", "bar", "baz", "huga"]);
@@ -505,12 +497,7 @@ describe.skip("ARsshClient connection test", function() {
         expect(rt).to.have.members(["foo", "hoge", "huga"]);
       });
       it("should recv files which matches only filter but should not recv which matches exclude filter", async function() {
-        await arssh.recv(
-          remoteRoot,
-          localEmptyDir,
-          "*/{ba*,hoge/*}",
-          "**/piyo"
-        );
+        await arssh.recv(remoteRoot, localEmptyDir, "*/{ba*,hoge/*}", "**/piyo");
         let rt = await promisify(fs.readdir)(path.join(localEmptyDir));
         expect(rt).to.have.members(["bar", "baz", "hoge", "huga"]);
         rt = await promisify(fs.readdir)(path.join(localEmptyDir, "hoge"));
