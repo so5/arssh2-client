@@ -45,7 +45,7 @@ const {
   remoteFiles
 } = require("./testFiles");
 
-//process.on("unhandledRejection", console.dir);
+process.on("unhandledRejection", console.dir);
 
 describe.skip("ARsshClient connection test", function() {
   this.timeout(20000);
