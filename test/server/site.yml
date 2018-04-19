@@ -1,0 +1,24 @@
+- hosts: all
+  become: true
+  tasks:
+    - yum:
+        name: policycoreutils-python
+        state: present
+
+    - seport:
+        ports: 2022
+        proto: tcp
+        setype: ssh_port_t
+        state: present
+
+    - copy:
+        src: ./sshd_for_test.service
+        dest: /etc/systemd/system/sshd_for_test.service
+
+    - copy:
+        src: ./sshd_for_test
+        dest: /etc/ssh/sshd_for_test
+
+    - systemd:
+        state: started
+        name: sshd_for_test

@@ -1,5 +1,6 @@
 #connection test setting file
 ARsshTestSettings.json
+.vagrant
 .nyc_output/
 coverage/
 
