@@ -1,15 +1,17 @@
-const fs = require("fs");
-let config = {};
+const fs = require("fs-extra");
 
-try {
-  config = require("./ARsshTestSettings.json");
-  if (!config.hasOwnProperty("privateKey")) {
-    const keyFile = `${process.env.HOME}/.ssh/id_rsa`;
-    config.privateKey = fs.readFileSync(keyFile).toString();
+async function readConfig(configFile, keyFile){
+  let config = {};
+  try {
+    config = await fs.readJson(configFile);
+    if (!config.hasOwnProperty("privateKey")) {
+      if(keyFile === undefined) keyFile = `${process.env.HOME}/.ssh/id_rsa`;
+      config.privateKey = (await fs.readFile(keyFile)).toString();
+    }
+  } catch (e) {
+    console.log("test setting file load failed", e); // eslint-disable-line no-console
   }
-  //config.debug=console.log  // to output ssh2's debug log
-} catch (e) {
-  console.log("test setting file load failed"); // eslint-disable-line no-console
+  return config
 }
 
-module.exports = config;
+module.exports = readConfig;

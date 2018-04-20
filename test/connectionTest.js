@@ -13,7 +13,6 @@ const ARsshClient = require("../lib/index.js");
 const PsshClient = require("../lib/PsshClient.js");
 const SftpUtil = require("../lib/SftpUtils.js");
 
-let config = require("./config");
 /*
  * test directory tree
  * ${ROOT}
@@ -44,6 +43,8 @@ const {
   remoteEmptyDir,
   remoteFiles
 } = require("./testFiles");
+const readConfig = require("./config");
+const configFile = "test/ARsshTestSettings.json";
 
 process.on("unhandledRejection", console.dir);
 
@@ -53,6 +54,7 @@ describe.skip("ARsshClient connection test", function() {
   let sshout = sinon.stub();
   let ssherr = sinon.stub();
   before(async function() {
+    const config = await readConfig(configFile);
     let pssh = new PsshClient(config);
     await pssh.connect();
     let sftpStream = await pssh.sftp();
@@ -63,7 +65,8 @@ describe.skip("ARsshClient connection test", function() {
     await Promise.all(promises);
     pssh.disconnect();
   });
-  beforeEach(function() {
+  beforeEach(async function() {
+    const config = await readConfig(configFile);
     arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100 });
     arssh.on("stdout", sshout);
     arssh.on("stderr", ssherr);
@@ -74,6 +77,7 @@ describe.skip("ARsshClient connection test", function() {
     ssherr.reset();
   });
   after(async function() {
+    const config = await readConfig(configFile);
     let pssh = new PsshClient(config);
     await pssh.connect();
     let sftpStream = await pssh.sftp();
@@ -91,7 +95,7 @@ describe.skip("ARsshClient connection test", function() {
       expect(await arssh.canConnect()).to.be.true;
     });
     it("should be rejected if user does not exist", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.username = "xxxxx";
       const arssh2 = new ARsshClient(config2, {
         connectionRetryDelay: 100
@@ -104,7 +108,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if user is undefined", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.username = undefined;
       const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
       await arssh2
@@ -115,7 +119,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if password is wrong", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.password = "";
       config2.passphrase = undefined;
       config2.privateKey = undefined;
@@ -128,7 +132,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if privateKey is wrong", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.privateKey = "xxx";
       const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
       await arssh2
@@ -139,7 +143,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if host does not exist", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.hostname = "foo.bar.example.com";
       const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
       await arssh2
@@ -151,7 +155,7 @@ describe.skip("ARsshClient connection test", function() {
     });
     it("should be rejected if host(ip address) does not exist", async function() {
       this.timeout(0);
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.hostname = "192.0.2.1";
       config2.readyTimeout = 200;
       const arssh2 = new ARsshClient(config2, { connectionRetry: 1, connectionRetryDelay: 10 });
@@ -163,7 +167,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if port number is out of range(-1)", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.port = -1;
       const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
       await arssh2
@@ -174,7 +178,7 @@ describe.skip("ARsshClient connection test", function() {
         });
     });
     it("should be rejected if port number is out of range(65536)", async function() {
-      const config2 = Object.assign({}, config);
+      const config2 = await readConfig(configFile);
       config2.port = 65536;
       const arssh2 = new ARsshClient(config2, { connectionRetryDelay: 100 });
       await arssh2
@@ -311,6 +315,7 @@ describe.skip("ARsshClient connection test", function() {
     let sftp;
     let pssh;
     beforeEach(async function() {
+      const config = await readConfig(configFile);
       pssh = new PsshClient(config);
       await pssh.connect();
       let sftpStream = await pssh.sftp();
