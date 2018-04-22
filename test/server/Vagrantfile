@@ -5,6 +5,7 @@ Vagrant.configure("2") do |config|
   config.vm.box = "centos/7"
   config.ssh.insert_key = false
   config.vm.network :forwarded_port, host: 2022, guest: 2022
+  config.vm.network :forwarded_port, host: 2023, guest: 2023
   config.vm.synced_folder "./", "/vagrant", type: "rsync", disable: "true", rsync__exclude: [".git/"], rsync__args: ["--verbose", "--archive", "--compress", "--copy-unsafe-links"]
   config.vm.provider "virtualbox" do |vb|
     vb.gui = false

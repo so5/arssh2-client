@@ -1,0 +1,33 @@
+#/etc/ssh/sshd_for_test
+Port 2022
+Protocol 2
+SyslogFacility AUTHPRIV
+
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+
+PermitRootLogin no
+PasswordAuthentication yes
+ChallengeResponseAuthentication no
+
+RekeyLimit 1k 5
+LogLevel DEBUG3
+
+GSSAPIAuthentication yes
+GSSAPICleanupCredentials yes
+
+UsePAM yes
+
+AcceptEnv LANG LC_CTYPE LC_NUMERIC LC_TIME LC_COLLATE LC_MONETARY LC_MESSAGES
+AcceptEnv LC_PAPER LC_NAME LC_ADDRESS LC_TELEPHONE LC_MEASUREMENT
+AcceptEnv LC_IDENTIFICATION LC_ALL LANGUAGE
+AcceptEnv XMODIFIERS
+
+X11Forwarding yes
+PidFile /var/run/sftp.pid
+
+UseDNS no
+GSSAPIAuthentication no
+
+Subsystem   sftp    internal-sftp -f local5 -l INFO

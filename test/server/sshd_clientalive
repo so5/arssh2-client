@@ -1,5 +1,5 @@
 #/etc/ssh/sshd_for_test
-Port 2022
+Port 2023
 Protocol 2
 SyslogFacility AUTHPRIV
 
@@ -11,6 +11,9 @@ PermitRootLogin no
 PasswordAuthentication yes
 ChallengeResponseAuthentication no
 
+ClientAliveCountMax 1
+ClientAliveInterval 5
+LogLevel DEBUG3
 
 GSSAPIAuthentication yes
 GSSAPICleanupCredentials yes

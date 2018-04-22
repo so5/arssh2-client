@@ -1,5 +1,5 @@
 - hosts: all
-  become: true
+  become: yes
   tasks:
     - yum:
         name: policycoreutils-python
@@ -11,14 +11,48 @@
         setype: ssh_port_t
         state: present
 
-    - copy:
-        src: ./sshd_for_test.service
-        dest: /etc/systemd/system/sshd_for_test.service
+    - seport:
+        ports: 2023
+        proto: tcp
+        setype: ssh_port_t
+        state: present
 
     - copy:
-        src: ./sshd_for_test
-        dest: /etc/ssh/sshd_for_test
+        src: ./sshd_rekey.service
+        dest: /etc/systemd/system/sshd_rekey.service
+
+    - copy:
+        src: ./sshd_rekey
+        dest: /etc/ssh/sshd_rekey
+
+    - copy:
+        src: ./sshd_clientalive.service
+        dest: /etc/systemd/system/sshd_clientalive.service
+
+    - copy:
+        src: ./sshd_clientalive
+        dest: /etc/ssh/sshd_clientalive
+
+    - sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+      with_items:
+        - name: net.ipv4.tcp_keepalive_time
+          value: 45
+        - name: net.ipv4.tcp_keepalive_probes
+          value: 3
+        - name: net.ipv4.tcp_keepalive_intvl
+          value: 5
 
     - systemd:
         state: started
-        name: sshd_for_test
+        name: "{{ item }}"
+        enabled: yes
+      with_items:
+        - sshd_rekey
+        - sshd_clientalive
+
+    - systemd:
+        daemon_reload: yes
+

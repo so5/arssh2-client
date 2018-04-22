@@ -4,6 +4,8 @@ ARsshTestSettings.json
 .nyc_output/
 coverage/
 
+site.retry
+
 #for node related files
 # Logs
 logs

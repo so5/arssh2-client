@@ -42,24 +42,24 @@ let createLocalFiles = async () => {
   return Promise.all(promises);
 };
 
-let createRemoteFiles = async (ssh, sftp) => {
-  let remoteDir2 = `${remoteRoot}/hoge`;
-  let promises = [];
+const createRemoteFiles = async (ssh) => {
+  const remoteDir2 = `${remoteRoot}/hoge`;
+  const promises = [];
   //create remote files
-  await sftp.mkdir_p(`${remoteDir2}`);
-  promises.push(sftp.mkdir_p(`${remoteEmptyDir}`));
+  await ssh.mkdir_p(`${remoteDir2}`);
+  promises.push(ssh.mkdir_p(`${remoteEmptyDir}`));
   let script = "";
   remoteFiles.forEach(async (remoteFile) => {
     script += `echo ${remoteFile} > ${remoteFile};`;
   });
-  promises.push(ssh.exec(script, {}));
+  promises.push(ssh.exec(script));
   return Promise.all(promises);
 };
 
-let clearRemoteTestFiles = async (ssh) => {
-  return ssh.exec(`rm -fr ${remoteRoot}`, {});
+const clearRemoteTestFiles = async (ssh) => {
+  return ssh.exec(`rm -fr ${remoteRoot}`);
 };
-let clearLocalTestFiles = async () => {
+const clearLocalTestFiles = async () => {
   return del(localRoot);
 };
 

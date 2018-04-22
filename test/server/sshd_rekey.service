@@ -1,0 +1,15 @@
+[Unit]
+Description=OpenSSH server with short rekey interval setting
+After=syslog.target network.target auditd.service
+
+[Service]
+EnvironmentFile=/etc/sysconfig/sshd
+ExecStart=/usr/sbin/sshd -D -f /etc/ssh/sshd_rekey
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=42s
+
+[Install]
+WantedBy=multi-user.target
+
