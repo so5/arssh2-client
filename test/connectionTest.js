@@ -53,7 +53,7 @@ async function isDir(target, ssh) {
   return output[0].startsWith("d");
 }
 
-async function stat(target, ssh){
+async function stat(target, ssh) {
   const output = [];
   await ssh.exec(`stat --format %a ${target}`, {}, output, output);
   return output[0].trim();
@@ -76,8 +76,6 @@ describe("ARsshClient connection test", function() {
   beforeEach(async function() {
     const config = await readConfig(configFile);
     arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100 });
-    arssh.on("stdout", sshout);
-    arssh.on("stderr", ssherr);
   });
   afterEach(function() {
     arssh.disconnect();
@@ -198,37 +196,29 @@ describe("ARsshClient connection test", function() {
 
     it("should execute single command with stdout", async function() {
       const stdout = [];
-      let rt = await arssh.exec(`echo ${testText}`, {}, stdout);
+      let rt = await arssh.exec(`echo ${testText}`, {}, stdout, ssherr);
       expect(rt).to.equal(0);
-      expect(sshout).to.be.calledOnce;
-      expect(sshout).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(ssherr).not.to.be.called;
       expect(stdout).to.have.members(["hoge\n"]);
     });
     it("should execute single command with stderr", async function() {
       const stderr = [];
-      let rt = await arssh.exec(`echo ${testText} >&2`, {}, null, stderr);
+      let rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, stderr);
       expect(rt).to.equal(0);
       expect(sshout).not.to.be.called;
-      expect(ssherr).to.be.calledOnce;
-      expect(ssherr).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(stderr).to.have.members(["hoge\n"]);
     });
     it("should execute single command with stdout & stderr", async function() {
       const output = [];
       let rt = await arssh.exec(`echo ${testText}; echo ${testText}>&2`, {}, output, output);
       expect(rt).to.equal(0);
-      expect(sshout).to.be.calledOnce;
-      expect(ssherr).to.be.calledOnce;
-      expect(sshout).to.be.calledWith(Buffer.from(testText + "\n"));
-      expect(ssherr).to.be.calledWith(Buffer.from(testText + "\n"));
       expect(output).to.have.members(["hoge\n", "hoge\n"]);
     });
     it(`should execute ${numExec} times after 1sec sleep`, async function() {
       this.timeout(0);
-      let promises = [];
+      const promises = [];
       for (let i = 0; i < numExec; i++) {
-        promises.push(arssh.exec(`sleep 1&& echo ${testText} ${i}`));
+        promises.push(arssh.exec(`sleep 1&& echo ${testText} ${i}`, {}, sshout, ssherr));
       }
       let rt = await Promise.all(promises);
 
@@ -241,21 +231,21 @@ describe("ARsshClient connection test", function() {
       // check output of ssh
       expect(ssherr).not.to.be.called;
       expect(sshout.args).to.have.lengthOf(numExec);
-      let results = sshout.args.map((e) => {
+      const results = sshout.args.map((e) => {
         return e[0].toString();
       });
 
-      let expectedResults = [];
+      const expectedResults = [];
       for (let i = 0; i < numExec; i++) {
         expectedResults.push(`${testText} ${i}` + "\n");
       }
       expect(results).to.have.members(expectedResults);
     });
-    it.skip(`${numExec} times command execution after 10sec sleep`, async function() {
+    it.skip(`should execute ${numExec} times after 10sec sleep`, async function() {
       this.timeout(0);
-      let promises = [];
+      const promises = [];
       for (let i = 0; i < numExec; i++) {
-        promises.push(arssh.exec(`sleep 10&& echo ${testText} ${i}`));
+        promises.push(arssh.exec(`sleep 10&& echo ${testText} ${i}`, {}, sshout, ssherr));
       }
       let rt = await Promise.all(promises);
 
@@ -268,11 +258,11 @@ describe("ARsshClient connection test", function() {
       // check output of ssh
       expect(ssherr).not.to.be.called;
       expect(sshout.args).to.have.lengthOf(numExec);
-      let results = sshout.args.map((e) => {
+      const results = sshout.args.map((e) => {
         return e[0].toString();
       });
 
-      let expectedResults = [];
+      const expectedResults = [];
       for (let i = 0; i < numExec; i++) {
         expectedResults.push(`${testText} ${i}` + "\n");
       }
@@ -282,19 +272,19 @@ describe("ARsshClient connection test", function() {
 
   describe("#realpath", function() {
     it("should return absolute path of existing directory", async function() {
-      let remoteHome = await arssh.realpath(".");
-      let rt = arssh.realpath(remoteRoot);
-      return expect(rt).to.become(path.posix.join(remoteHome, remoteRoot));
+      const remoteHome = await arssh.realpath(".");
+      const rt = await arssh.realpath(remoteRoot);
+      expect(rt).to.equal(path.posix.join(remoteHome, remoteRoot));
     });
     it("should return absolute path of existing file", async function() {
-      let remoteHome = await arssh.realpath(".");
-      let rt = arssh.realpath(remoteFiles[0]);
-      return expect(rt).to.become(path.posix.join(remoteHome, remoteFiles[0]));
+      const remoteHome = await arssh.realpath(".");
+      const rt = await arssh.realpath(remoteFiles[0]);
+      expect(rt).to.equal(path.posix.join(remoteHome, remoteFiles[0]));
     });
-    it("should return absolute path of not-existing file", async function() {
-      let remoteHome = await arssh.realpath(".");
-      let rt = arssh.realpath(path.posix.join(remoteRoot, nonExisting));
-      return expect(rt).to.become(path.posix.join(remoteHome, remoteRoot, nonExisting));
+    it("should reject absolute path of not-existing file", async function() {
+      const remoteHome = await arssh.realpath(".");
+      const rt = arssh.realpath(path.posix.join(remoteHome, remoteRoot, nonExisting));
+      return expect(rt).to.rejectedWith("No such file");
     });
   });
 
@@ -340,7 +330,7 @@ describe("ARsshClient connection test", function() {
         const tmp2 = output.find((e) => {
           return e.endsWith(path.posix.basename(remoteFiles[0]));
         });
-        expect(tmp2.startsWith("-rwx------ ")).to.be.true;
+        expect(tmp2.startsWith("-rwx------")).to.be.true;
       });
     });
     describe("#mkdir_p", function() {
