@@ -4,9 +4,9 @@ const { promisify } = require("util");
 
 const del = require("del");
 
-let localRoot = "ARssh_testLocalDir";
-let localEmptyDir = path.join(localRoot, "huga");
-let localFiles = [
+const localRoot = "ARssh_testLocalDir";
+const localEmptyDir = path.join(localRoot, "huga");
+const localFiles = [
   path.join(localRoot, "foo"),
   path.join(localRoot, "bar"),
   path.join(localRoot, "baz"),
@@ -15,9 +15,9 @@ let localFiles = [
   path.join(localRoot, "hoge", "poyo")
 ];
 
-let remoteRoot = "ARssh_testRemoteDir";
-let remoteEmptyDir = `${remoteRoot}/huga`;
-let remoteFiles = [
+const remoteRoot = "ARssh_testRemoteDir";
+const remoteEmptyDir = `${remoteRoot}/huga`;
+const remoteFiles = [
   `${remoteRoot}/foo`,
   `${remoteRoot}/bar`,
   `${remoteRoot}/baz`,
@@ -25,12 +25,12 @@ let remoteFiles = [
   `${remoteRoot}/hoge/puyo`,
   `${remoteRoot}/hoge/poyo`
 ];
-let nonExisting = "ARSSH_nonExisting";
+const nonExisting = "ARSSH_nonExisting";
 
 /*
  * prepare local files which contain its filename
  */
-let createLocalFiles = async () => {
+async function createLocalFiles() {
   let localDir2 = path.join(localRoot, "hoge");
   let promises = [];
   await promisify(fs.mkdir)(localRoot);
@@ -40,9 +40,9 @@ let createLocalFiles = async () => {
     promises.push(promisify(fs.writeFile)(localFile, localFile + "\n"));
   });
   return Promise.all(promises);
-};
+}
 
-const createRemoteFiles = async (ssh) => {
+async function createRemoteFiles(ssh) {
   //create remote files
   await ssh.mkdir_p(`${remoteRoot}/hoge`);
   await ssh.mkdir_p(remoteEmptyDir);
@@ -51,14 +51,14 @@ const createRemoteFiles = async (ssh) => {
     script += `echo ${remoteFile} > ${remoteFile};`;
   });
   return ssh.exec(script);
-};
+}
 
-const clearRemoteTestFiles = async (ssh) => {
+async function clearRemoteTestFiles(ssh) {
   return ssh.exec(`rm -fr ${remoteRoot}`);
-};
-const clearLocalTestFiles = async () => {
+}
+async function clearLocalTestFiles() {
   return del(localRoot);
-};
+}
 
 module.exports.createLocalFiles = createLocalFiles;
 module.exports.createRemoteFiles = createRemoteFiles;
