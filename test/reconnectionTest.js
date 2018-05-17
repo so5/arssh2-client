@@ -10,7 +10,7 @@ const testText = "hoge";
 let config = null;
 let arssh = null;
 
-describe("reconnect test", function() {
+describe.skip("reconnect test", function() {
   this.timeout(0);
   beforeEach(async function() {
     const configFile = "test/server/vbox.json";
