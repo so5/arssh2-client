@@ -10,7 +10,7 @@ const testText = "hoge";
 let config = null;
 let arssh = null;
 
-describe.skip("reconnect test", function() {
+describe("reconnect test", function() {
   this.timeout(0);
   beforeEach(async function() {
     const configFile = "test/server/vbox.json";
@@ -28,6 +28,29 @@ describe.skip("reconnect test", function() {
     await sleep(1000);
 
     rt = await arssh.exec(`echo ${testText}`, {}, stdout);
+    expect(rt).to.equal(0);
+    expect(stdout).to.have.members(["hoge\n"]);
+  });
+  it("should exec command after network device is reset", async function() {
+    const stdout = [];
+    let rt = await arssh.exec(`sudo ip link set dev eth0 down&& sleep 1 &&sudo ip link set dev eth0 up`, {}, stdout);
+    expect(rt).to.equal(0);
+    await sleep(1000);
+    rt = await arssh.exec(`echo ${testText}`, {}, stdout);
+    expect(rt).to.equal(0);
+    expect(stdout).to.have.members(["hoge\n"]);
+  });
+  it("should exec command if network device is reset while executing", async function() {
+    const stdout = [];
+    arssh.maxConnection = 2;
+    let rt = await arssh.exec(
+      "nohup sh -c 'sudo ip link set dev eth0 down&& sleep 10 &&sudo ip link set dev eth0 up' &",
+      {},
+      stdout
+    );
+    expect(rt).to.equal(0);
+    await sleep(1000);
+    rt = await arssh.exec(`echo ${testText}| tee tmp`, {}, stdout);
     expect(rt).to.equal(0);
     expect(stdout).to.have.members(["hoge\n"]);
   });

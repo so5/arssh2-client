@@ -7,7 +7,9 @@ const chai = require("chai");
 const { expect } = require("chai");
 const sinon = require("sinon");
 const sinonChai = require("sinon-chai");
+const chaiFs = require("chai-fs");
 chai.use(sinonChai);
+chai.use(chaiFs);
 
 const ARsshClient = require("../lib/index.js");
 Error.traceLimit = 100000;
@@ -647,6 +649,71 @@ describe("ARsshClient connection test", function() {
             expect(e).to.be.an("error");
             expect(e.message).to.equal("src must be existing file or directory");
           }
+        });
+      });
+    });
+  });
+  describe("connection renewal functionality", function() {
+    this.timeout(10000);
+    let ssh;
+    beforeEach(async function() {
+      this.timeout(0);
+      const config = await readConfig(configFile);
+      ssh = new ARsshClient(config);
+      await clearRemoteTestFiles(ssh);
+      await createRemoteFiles(ssh);
+      await clearLocalTestFiles();
+      await createLocalFiles();
+      arssh.renewInterval = 100;
+      arssh.renewDelay = 1000;
+    });
+    afterEach(async function() {
+      this.timeout(0);
+      await clearRemoteTestFiles(ssh);
+      await clearLocalTestFiles();
+      ssh.disconnect();
+    });
+    describe("#exec", function() {
+      this.timeout(10000);
+      const testText = "hoge";
+      it("should execute single command with stdout", async function() {
+        const stdout = [];
+        let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
+        expect(rt).to.equal(0);
+        //after reconnect!!
+        rt = await arssh.exec(`echo ${testText}`, {}, stdout, ssherr);
+        expect(rt).to.equal(0);
+        expect(stdout).to.have.members(["hoge\n", "hoge\n"]);
+        expect(ssherr).not.to.be.called;
+        expect(arssh.numReconnect).to.equal(1);
+      });
+    });
+    describe("with file operation", function() {
+      describe("#send", function() {
+        it("should send single file", async function() {
+          await arssh.send(localFiles[0], remoteEmptyDir);
+          let rt = await ssh.ls(remoteEmptyDir);
+          expect(rt).to.have.members(["foo"]);
+          //after reconnect!!
+          await arssh.send(localFiles[1], remoteEmptyDir);
+          rt = await ssh.ls(remoteEmptyDir);
+          expect(rt).to.have.members(["foo", "bar"]);
+          expect(arssh.numReconnect).to.equal(1);
+        });
+      });
+      describe("#recv", function() {
+        it("should get single file", async function() {
+          await arssh.recv(remoteFiles[3], localEmptyDir);
+          expect(localEmptyDir)
+            .to.be.a.directory()
+            .with.files(["piyo"]);
+          //after reconnect!!
+          await arssh.recv(remoteFiles[4], localEmptyDir);
+          expect(localEmptyDir)
+            .to.be.a.directory()
+            .with.files(["piyo", "puyo"]);
+
+          expect(arssh.numReconnect).to.equal(1);
         });
       });
     });
