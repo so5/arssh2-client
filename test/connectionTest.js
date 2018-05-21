@@ -656,6 +656,7 @@ describe("ARsshClient connection test", function() {
   describe("connection renewal functionality", function() {
     this.timeout(10000);
     let ssh;
+    const testText = "hoge";
     beforeEach(async function() {
       this.timeout(0);
       const config = await readConfig(configFile);
@@ -664,8 +665,9 @@ describe("ARsshClient connection test", function() {
       await createRemoteFiles(ssh);
       await clearLocalTestFiles();
       await createLocalFiles();
-      arssh.renewInterval = 100;
+      arssh.renewInterval = 1000;
       arssh.renewDelay = 1000;
+      arssh.maxConnection = 5;
     });
     afterEach(async function() {
       this.timeout(0);
@@ -674,44 +676,53 @@ describe("ARsshClient connection test", function() {
       ssh.disconnect();
     });
     describe("#exec", function() {
-      this.timeout(10000);
-      const testText = "hoge";
       it("should execute single command with stdout", async function() {
+        arssh.verbose = true;
         const stdout = [];
         let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
         expect(rt).to.equal(0);
         //after reconnect!!
-        rt = await arssh.exec(`echo ${testText}`, {}, stdout, ssherr);
-        expect(rt).to.equal(0);
-        expect(stdout).to.have.members(["hoge\n", "hoge\n"]);
+        const p = [];
+        for (let i = 0; i < 11; ++i) {
+          p.push(arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr));
+        }
+        rt = await Promise.all(p);
+        expect(
+          rt.some((e) => {
+            return e !== 0;
+          })
+        ).to.false;
+        expect(rt).to.have.lengthOf(11);
+        // please note stdout is rotated before adding new output if its length is more than 5
+        // so, exec called total 12 times but stdout keep only last 6 results
+        expect(stdout).to.have.members(["hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n"]);
         expect(ssherr).not.to.be.called;
-        expect(arssh.numReconnect).to.equal(1);
+        expect(arssh.numReconnect).to.equal(2);
       });
     });
     describe("with file operation", function() {
       describe("#send", function() {
         it("should send single file", async function() {
-          await arssh.send(localFiles[0], remoteEmptyDir);
-          let rt = await ssh.ls(remoteEmptyDir);
-          expect(rt).to.have.members(["foo"]);
+          const stdout = [];
+          let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
+          expect(rt).to.equal(0);
           //after reconnect!!
           await arssh.send(localFiles[1], remoteEmptyDir);
           rt = await ssh.ls(remoteEmptyDir);
-          expect(rt).to.have.members(["foo", "bar"]);
+          expect(rt).to.have.members(["bar"]);
           expect(arssh.numReconnect).to.equal(1);
         });
       });
       describe("#recv", function() {
         it("should get single file", async function() {
-          await arssh.recv(remoteFiles[3], localEmptyDir);
-          expect(localEmptyDir)
-            .to.be.a.directory()
-            .with.files(["piyo"]);
+          const stdout = [];
+          let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
+          expect(rt).to.equal(0);
           //after reconnect!!
           await arssh.recv(remoteFiles[4], localEmptyDir);
           expect(localEmptyDir)
             .to.be.a.directory()
-            .with.files(["piyo", "puyo"]);
+            .with.files(["puyo"]);
 
           expect(arssh.numReconnect).to.equal(1);
         });
