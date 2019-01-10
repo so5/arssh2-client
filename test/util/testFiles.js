@@ -1,3 +1,4 @@
+"use strict";
 const fs = require("fs");
 const path = require("path");
 const { promisify } = require("util");
@@ -31,15 +32,20 @@ const nonExisting = "ARSSH_nonExisting";
  * prepare local files which contain its filename
  */
 async function createLocalFiles() {
-  let localDir2 = path.join(localRoot, "hoge");
-  let promises = [];
+  const localDir2 = path.join(localRoot, "hoge");
+  const promises = [];
   await promisify(fs.mkdir)(localRoot);
   await promisify(fs.mkdir)(localDir2);
   promises.push(promisify(fs.mkdir)(localEmptyDir));
-  localFiles.forEach((localFile) => {
-    promises.push(promisify(fs.writeFile)(localFile, localFile + "\n"));
+  localFiles.forEach((localFile)=>{
+    promises.push(promisify(fs.writeFile)(localFile, `${localFile}\n`));
   });
   return Promise.all(promises);
+}
+
+
+async function clearLocalTestFiles() {
+  return del(localRoot);
 }
 
 async function createRemoteFiles(ssh) {
@@ -47,7 +53,7 @@ async function createRemoteFiles(ssh) {
   await ssh.mkdir_p(`${remoteRoot}/hoge`);
   await ssh.mkdir_p(remoteEmptyDir);
   let script = "";
-  remoteFiles.forEach(async (remoteFile) => {
+  remoteFiles.forEach(async(remoteFile)=>{
     script += `echo ${remoteFile} > ${remoteFile};`;
   });
   return ssh.exec(script);
@@ -55,9 +61,6 @@ async function createRemoteFiles(ssh) {
 
 async function clearRemoteTestFiles(ssh) {
   return ssh.exec(`rm -fr ${remoteRoot}`);
-}
-async function clearLocalTestFiles() {
-  return del(localRoot);
 }
 
 module.exports.createLocalFiles = createLocalFiles;
