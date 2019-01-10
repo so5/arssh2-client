@@ -10,5 +10,8 @@ services:
 
 before_script:
   - docker  build -t sshd ./test
-  - docker run -p 127.0.0.1:22:4567
+  - docker run -p 127.0.0.1:22:4567 sshd
   - docker ps -a
+
+notifications:
+  slack: longtail-software:N1pYxbD79V3wTe5IBqtyQlj8
