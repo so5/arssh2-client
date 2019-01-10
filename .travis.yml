@@ -9,7 +9,7 @@ services:
 - docker
 before_script:
 - docker  build -t sshd ./test
-- docker run -p 127.0.0.1:4567:22 sshd
+- docker run -p 4567:22 -d sshd
 - docker ps -a
 notifications:
   mail: false
