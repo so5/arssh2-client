@@ -9,14 +9,13 @@
   "repository": "github:so5/arssh2-client",
   "main": "lib/index.js",
   "scripts": {
-    "format": "eslint --fix */*.js",
     "mocha": "mocha",
     "mocha-v": "cross-env DEBUG=arssh2:* mocha",
     "mocha-vv": "cross-env DEBUG=arssh2:*,sbs:* mocha",
     "mocha-vvv": "cross-env DEBUG=arssh2:*,ssh2:*,sbs:* mocha",
     "mocha-vvvv": "cross-env DEBUG=* mocha",
-    "check": "run-s format lint test coverage",
-    "lint": "eslint lib/*.js test/*.js",
+    "check": "run-s lint test coverage",
+    "lint": "eslint --fix lib/*.js test/*.js test/*/*.js",
     "test": "nyc --reporter=html --reporter=text mocha",
     "coverage": "nyc report --reporter=text-lcov | coveralls"
   },

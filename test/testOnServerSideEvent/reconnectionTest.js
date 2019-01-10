@@ -1,4 +1,4 @@
-const {fs} = require("fs-extra");
+const { fs } = require("fs-extra");
 const { expect } = require("chai");
 
 const ARsshClient = require("../lib/index.js");

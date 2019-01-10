@@ -98,7 +98,7 @@ describe("test for sftp subcommands", function() {
       const rt = await arssh.realpath(remoteFiles[0]);
       expect(rt).to.equal(path.posix.join(remoteHome, remoteFiles[0]));
     });
-    it("should return absolute path of not-existing", async ()=>{
+    it("should return absolute path of not-existing", async()=>{
       const remoteHome = await arssh.realpath(".");
       const rt = await arssh.realpath(nonExisting);
       expect(rt).to.equal(path.posix.join(remoteHome, nonExisting));

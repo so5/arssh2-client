@@ -1,6 +1,6 @@
 const path = require("path");
 const fs = require("fs-extra");
-const {exec} = require("child_process");
+const { exec } = require("child_process");
 
 //setup test framework
 const chai = require("chai");
@@ -28,7 +28,7 @@ describe("utilty functions in ARssh", ()=>{
       { arg: path.join(localRoot, "foo"), expected: false },
       { arg: nonExisting, expected: false }
     ].forEach((param)=>{
-      it("should return true with dir", async ()=>{
+      it("should return true with dir", async()=>{
         const rt = await isDirLocal(param.arg);
         expect(rt).to.equal(param.expected);
       });
@@ -40,7 +40,7 @@ describe("utilty functions in ARssh", ()=>{
       { arg: path.join(localRoot, "foo"), expected: true },
       { arg: nonExisting, expected: false }
     ].forEach((param)=>{
-      it("should return true with file", async ()=>{
+      it("should return true with file", async()=>{
         const rt = await isFileLocal(param.arg);
         expect(rt).to.equal(param.expected);
       });
@@ -55,7 +55,7 @@ describe("utilty functions in ARssh", ()=>{
       },
       { arg: nonExisting, expected: false }
     ].forEach((param)=>{
-      it("should return size with file", async ()=>{
+      it("should return size with file", async()=>{
         const rt = await getSizeLocal(param.arg);
         expect(rt).to.equal(param.expected);
       });
@@ -63,8 +63,8 @@ describe("utilty functions in ARssh", ()=>{
   });
   describe("#getFileMode", ()=>{
     localFiles.forEach((filename)=>{
-      it("should return default file mode", async ()=>{
-        const perm='412'
+      it("should return default file mode", async()=>{
+        const perm = "412";
         await fs.chmod(filename, perm);
         const stats = await fs.stat(filename);
         const rt = getFileMode(stats.mode);

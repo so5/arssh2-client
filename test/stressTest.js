@@ -37,21 +37,22 @@ const {
   createRemoteFiles,
   remoteRoot,
   remoteFiles,
-  remoteEmptyDir
+  remoteEmptyDir,
+  nonExisting
 } = require("./util/testFiles");
 
 const getConfig = require("./util/config");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
-describe("ARsshClient stress test", function() {
+describe.skip("ARsshClient stress test", function() {
   this.timeout(0);
   //global variables
   let arssh;
   const sshout = sinon.stub();
   const ssherr = sinon.stub();
-  const numExec = 1000;
-  const numExecSmall = numExec / 20;
+  const numExec = 5000;
+  const numExecSmall = numExec / 40;
   const testText = "hoge";
 
   beforeEach(async()=>{
@@ -109,6 +110,18 @@ describe("ARsshClient stress test", function() {
       await clearLocalTestFiles();
       ssh.disconnect();
     });
+    it("should mkdir same directory", async()=>{
+      const p = [];
+
+      for (let i = 0; i < numExecSmall; i++) {
+        p.push(arssh.mkdir_p(path.posix.join(remoteRoot, nonExisting)));
+      }
+      const rt = await Promise.all(p);
+      //check if all return value is undefined
+      expect(rt).to.have.lengthOf(numExecSmall);
+      expect(rt).to.all.eql(undefined);
+
+    });
     it("should get file repeatedly", async()=>{
       const p = [];
 
@@ -117,7 +130,7 @@ describe("ARsshClient stress test", function() {
       }
       const rt = await Promise.all(p);
 
-      //check if all return value is 0
+      //check if all return value is undefined
       expect(rt).to.have.lengthOf(numExecSmall);
       expect(rt).to.all.eql(undefined);
 
@@ -193,7 +206,8 @@ describe("ARsshClient stress test", function() {
       const remoteExistingDirs = await arssh.ls(remoteEmptyDir);
       expect(remoteExistingDirs).to.have.members(expectedFiles);
       expect(remoteExistingDirs).to.have.lengthOf(numExecSmall);
-      for(const e in remoteExistingDirs){
+
+      for (const e in remoteExistingDirs) {
         const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e));
         expect(rt).to.have.members(["hoge", "huga", "foo", "bar", "baz"]);
       }
