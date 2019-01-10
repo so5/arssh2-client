@@ -44,19 +44,19 @@ const getConfig = require("./util/config");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
-describe.skip("ARsshClient stress test", function() {
+describe("ARsshClient stress test", function() {
   this.timeout(0);
   //global variables
   let arssh;
   const sshout = sinon.stub();
   const ssherr = sinon.stub();
-  const numExec = 100000;
-  const numExecSmall = numExec / 100;
+  const numExec = 1000;
+  const numExecSmall = numExec / 20;
   const testText = "hoge";
 
   beforeEach(async()=>{
     const config = await getConfig();
-    arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100 });
+    arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100, maxConnection: 8 });
   });
   afterEach(()=>{
     sshout.reset();
@@ -64,7 +64,7 @@ describe.skip("ARsshClient stress test", function() {
     arssh.disconnect();
   });
 
-  describe("exec only test", ()=>{
+  describe("just exec", ()=>{
     it(`should execute very short command ${numExec} times`, async()=>{
       const promises = [];
 
@@ -92,17 +92,19 @@ describe.skip("ARsshClient stress test", function() {
       expect(results).to.have.members(expectedResults);
     });
   });
-  describe("file transfer only test ", ()=>{
-    let ssh;
+  describe("test with file and/or directory operation ", ()=>{
     beforeEach(async()=>{
       const config = await getConfig();
-      ssh = new ARsshClient(config);
+      const ssh = new ARsshClient(config);
       await clearRemoteTestFiles(ssh);
       await createRemoteFiles(ssh);
       await clearLocalTestFiles();
       await createLocalFiles();
+      ssh.disconnect();
     });
-    afterEach(async()=>{
+    after(async()=>{
+      const config = await getConfig();
+      const ssh = new ARsshClient(config);
       await clearRemoteTestFiles(ssh);
       await clearLocalTestFiles();
       ssh.disconnect();
@@ -191,26 +193,10 @@ describe.skip("ARsshClient stress test", function() {
       const remoteExistingDirs = await arssh.ls(remoteEmptyDir);
       expect(remoteExistingDirs).to.have.members(expectedFiles);
       expect(remoteExistingDirs).to.have.lengthOf(numExecSmall);
-      remoteExistingDirs.forEach(async(e)=>{
+      for(const e in remoteExistingDirs){
         const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e));
-        expect(rt).to.have.members(localFiles);
-      });
-    });
-  });
-  describe("exec send and recieve mixed test", ()=>{
-    let ssh;
-    beforeEach(async()=>{
-      const config = await getConfig();
-      ssh = new ARsshClient(config);
-      await clearRemoteTestFiles(ssh);
-      await createRemoteFiles(ssh);
-      await clearLocalTestFiles();
-      await createLocalFiles();
-    });
-    afterEach(async()=>{
-      await clearRemoteTestFiles(ssh);
-      await clearLocalTestFiles();
-      ssh.disconnect();
+        expect(rt).to.have.members(["hoge", "huga", "foo", "bar", "baz"]);
+      }
     });
     it("should execute command and get file repeatedly", async()=>{
       const p = [];

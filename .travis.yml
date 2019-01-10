@@ -10,7 +10,6 @@ services:
 before_script:
 - docker  build -t sshd ./test
 - docker run -p 4567:22 -d sshd
-- docker ps -a
 notifications:
   mail: false
   slack:
