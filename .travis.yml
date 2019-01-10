@@ -4,4 +4,5 @@ node_js:
   - 'stable'
   - 'lts/*'
 after_success: npm run coverage
-services: sshd
+before_script:
+  - sh setup_ssh_server.sh
