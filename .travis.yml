@@ -9,6 +9,6 @@ services:
   - docker
 
 before_script:
-  - docker  build -t sshd .
+  - docker  build -t sshd ./test
   - docker run -p 127.0.0.1:22:4567
   - docker ps -a
