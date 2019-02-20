@@ -5,6 +5,14 @@ node_js:
 - lts/*
 after_success:
 - npm run coverage
+deploy:
+  provider: npm
+  email: sogo@longtail-software.co.jp
+  api_key:
+    secure: jGUjTLVv9oNAmoWN8SKHkCIRXAb6lr5iZepKWKyDMOV4pM08qFNGYg7ZKjvcjy0Vuu0b9t/jRr0U0mfeM0MPTQbuExIn6kzJmO4UJKcwYJEcv9vZ3x3xlimxLJx5KBy3fssW/cIuFQnIwgPTULPmFqE1uS4UAr6jbyNwnbr7reIIkgRoOPq9/Vjlm6/PayjqVTextv0MjJ1YMteR7UdcAAu+X2AcEyoCSOF2mS8MuGCY48EYJ9SSmgm50dfzstNuRomyNptR2Xrc4w7jOaR8tDwe/eJiihz/cQwt7IgGOKA1htXQ+NZvj4e44QcREarViUkQYSyIWfRBkUZ9uyWeZKgpXERSEepZ8FXasM2oh4Nr+NvYvST4T2jZQOA3zlIwBCrqXKRFZlpTLvsud7UfuqioJwa6psBWC42vUemsbOLCL2v7UKo9KGv/8hvIfk8eplTZM2nOkg0Wvv3BhrqZFIle8a8gxIfVfV7D8ZjMewP31/iYD4AOsbBJHmN4vTkxanv00S1Pp9G7lVOeQZWbMWuUz2UExJ3B7Mp8nVbdFBNnOodI1CpRJS52w2ae4h4uohDx6WUcN2JFoLqX2ZHRBU3M/HKSyDCe33rl66cdv58nNxlNuc1vo+ieXw9SJCd3QTfz2mkKfp0q3Y/Zx7I54kqDRNldMhUChHuzb+urjbc=
+  on:
+    tags: true
+  skip_cleanup: true
 services:
 - docker
 before_script:
