@@ -9,15 +9,12 @@
   "repository": "github:so5/arssh2-client",
   "main": "lib/index.js",
   "scripts": {
-    "mocha": "mocha",
-    "mocha-v": "cross-env DEBUG=arssh2:* mocha",
-    "mocha-vv": "cross-env DEBUG=arssh2:*,sbs:* mocha",
-    "mocha-vvv": "cross-env DEBUG=arssh2:*,ssh2:*,sbs:* mocha",
-    "mocha-vvvv": "cross-env DEBUG=* mocha",
-    "check": "run-s lint test coverage",
+    "mocha": "mocha --recursive test",
     "lint": "eslint --fix lib/*.js test/*.js test/*/*.js",
     "test": "nyc --reporter=html --reporter=text mocha",
-    "coverage": "nyc report --reporter=text-lcov | coveralls"
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
+    "check": "run-s lint test",
+    "postversion": "git push origin $(git describe --abbrev=0 --tags)"
   },
   "dependencies": {
     "chai-things": "^0.2.0",

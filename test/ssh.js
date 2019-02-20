@@ -48,6 +48,21 @@ describe("#exec", function() {
     expect(sshout).not.to.be.called;
     expect(stderr).to.have.members(["hoge\n"]);
   });
+  it("should execute single command with stdout and pass to call back routine", async()=>{
+    const rt = await arssh.exec(`echo ${testText}`, {}, sshout, ssherr);
+    expect(rt).to.equal(0);
+    expect(sshout).to.be.calledOnce;
+    expect(sshout).to.be.calledWithExactly("hoge\n");
+    expect(ssherr).not.to.be.called;
+  });
+  it("should execute single command with stderr and pass to call back routine", async()=>{
+    const stderr = [];
+    const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, ssherr);
+    expect(rt).to.equal(0);
+    expect(ssherr).to.be.calledOnce;
+    expect(ssherr).to.be.calledWithExactly("hoge\n");
+    expect(sshout).not.to.be.called;
+  });
   it("should execute single command with stdout & stderr", async()=>{
     const output = [];
     const rt = await arssh.exec(`echo ${testText}; echo ${testText}>&2`, {}, output, output);
