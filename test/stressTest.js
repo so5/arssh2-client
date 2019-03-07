@@ -120,7 +120,6 @@ describe.skip("ARsshClient stress test", function() {
       //check if all return value is undefined
       expect(rt).to.have.lengthOf(numExecSmall);
       expect(rt).to.all.eql(undefined);
-
     });
     it("should get file repeatedly", async()=>{
       const p = [];

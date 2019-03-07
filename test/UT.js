@@ -69,7 +69,6 @@ describe("utilty functions in ARssh", ()=>{
         const stats = await fs.stat(filename);
         const rt = getFileMode(stats.mode);
         expect(rt).to.equal(perm);
-
       });
     });
   });
