@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/so5/arssh2-client.svg?branch=master)](https://travis-ci.org/so5/arssh2-client)
 [![Coverage Status](https://coveralls.io/repos/github/so5/arssh2-client/badge.svg?branch=master)](https://coveralls.io/github/so5/arssh2-client?branch=master)
-[![Maintainability](https://api.codeclimate.com/v1/badges/fa854220ce9d6b122add/maintainability)](https://codeclimate.com/github/so5/arssh2-client/maintainability)
+[![Maintainability](https://api.codeclimate.com/v1/badges/fa854220ce9d6b122add/maintainability)](https://codeclimate.com/github/so5/arssh2-client/maintainability) [![Greenkeeper badge](https://badges.greenkeeper.io/so5/arssh2-client.svg)](https://greenkeeper.io/)
 
 # README #
 
