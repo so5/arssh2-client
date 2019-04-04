@@ -8,11 +8,11 @@ async function getConfig() {
   };
 
   if (process.env.hasOwnProperty("ARSSH_TEST_KEYFILE")) {
-    const keyFile = process.env.hasOwnProperty("ARSSH_TEST_KEYFILE");
+    const keyFile = process.env.ARSSH_TEST_KEYFILE;
     config.privateKey = (await fs.readFile(keyFile)).toString();
-    config.passphrase = process.env.ARSSH_TEST_PW;
+    config.passphrase = process.env.ARSSH_TEST_PW || "";
   } else {
-    config.password = process.env.ARSSH_TEST_PW;
+    config.password = process.env.ARSSH_TEST_PW || "";
   }
 
   return config;

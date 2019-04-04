@@ -6,6 +6,9 @@
     "name": "Naoyuki Sogo"
   },
   "license": "MIT",
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "repository": "github:so5/arssh2-client",
   "main": "lib/index.js",
   "scripts": {

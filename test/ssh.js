@@ -13,14 +13,16 @@ const ARsshClient = require("../lib/index.js");
 Error.traceLimit = 100000;
 
 const getConfig = require("./util/config");
-const { nonExisting } = require("./util/testFiles");
+const { nonExisting, remoteRoot } = require("./util/testFiles");
 
-describe("#exec", function() {
+describe("test for ssh execution", function() {
   this.timeout(10000);
+
   //global variables
   let arssh; //testee
   const sshout = sinon.stub();
   const ssherr = sinon.stub();
+
   beforeEach(async()=>{
     const config = await getConfig();
     arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100 });
@@ -31,55 +33,86 @@ describe("#exec", function() {
     arssh.disconnect();
   });
 
-
-  const testText = "hoge";
-
-  it("should execute single command with stdout", async()=>{
-    const stdout = [];
-    const rt = await arssh.exec(`echo ${testText}`, {}, stdout, ssherr);
-    expect(rt).to.equal(0);
-    expect(ssherr).not.to.be.called;
-    expect(stdout).to.have.members(["hoge\n"]);
+  describe("#watch", ()=>{
+    beforeEach(async()=>{
+      try {
+        await arssh.mkdir_p(remoteRoot);
+        await arssh.rm(`${remoteRoot}/tmp`);
+      } catch (e) {
+        if (e.message !== "No such file") {
+          throw e;
+        }
+      }
+    });
+    afterEach(async()=>{
+      try {
+        await arssh.rm(`${remoteRoot}/tmp`);
+        await arssh.rm(remoteRoot);
+      } catch (e) {
+        if (e.message !== "No such file") {
+          throw e;
+        }
+      }
+    });
+    it("should execute command repeatedly until output is match with specified regexp", async()=>{
+      const rt = await arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /hogehogehoge/, 10, 5, {}, sshout, ssherr);
+      expect(rt).to.equal(0);
+      expect(sshout).to.be.calledThrice;
+      expect(sshout.getCall(0)).to.be.calledWith("hoge");
+      expect(sshout.getCall(1)).to.be.calledWith("hogehoge");
+      expect(sshout.getCall(2)).to.be.calledWith("hogehogehoge");
+      expect(ssherr).not.to.be.called;
+    });
   });
-  it("should execute single command with stderr", async()=>{
-    const stderr = [];
-    const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, stderr);
-    expect(rt).to.equal(0);
-    expect(sshout).not.to.be.called;
-    expect(stderr).to.have.members(["hoge\n"]);
-  });
-  it("should execute single command with stdout and pass to call back routine", async()=>{
-    const rt = await arssh.exec(`echo ${testText}`, {}, sshout, ssherr);
-    expect(rt).to.equal(0);
-    expect(sshout).to.be.calledOnce;
-    expect(sshout).to.be.calledWithExactly("hoge\n");
-    expect(ssherr).not.to.be.called;
-  });
-  it("should execute single command with stderr and pass to call back routine", async()=>{
-    const stderr = [];
-    const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, ssherr);
-    expect(rt).to.equal(0);
-    expect(ssherr).to.be.calledOnce;
-    expect(ssherr).to.be.calledWithExactly("hoge\n");
-    expect(sshout).not.to.be.called;
-  });
-  it("should execute single command with stdout & stderr", async()=>{
-    const output = [];
-    const rt = await arssh.exec(`echo ${testText}; echo ${testText}>&2`, {}, output, output);
-    expect(rt).to.equal(0);
-    expect(output).to.have.members(["hoge\n", "hoge\n"]);
-  });
-  //please note that exec() resolves with non-zero value
-  //(126 permisssion deny or 127 file not found)
-  //but does not reject in following 2 cases
-  it("should not execute command which do not have exec permission", async()=>{
-    await arssh.exec("echo echo hoge >hoge");
-    await arssh.exec("chmod ugo-x hoge");
-    const rt = await arssh.exec("./hoge");
-    expect(rt).to.equal(126);
-  });
-  it("should reject if command is not found", async()=>{
-    const rt = await arssh.exec(`./${nonExisting}`, {});
-    expect(rt).to.equal(127);
+  describe("#exec", ()=>{
+    const testText = "hoge";
+    it("should execute single command with stdout", async()=>{
+      const stdout = [];
+      const rt = await arssh.exec(`echo ${testText}`, {}, stdout, ssherr);
+      expect(rt).to.equal(0);
+      expect(ssherr).not.to.be.called;
+      expect(stdout).to.have.members(["hoge\n"]);
+    });
+    it("should execute single command with stderr", async()=>{
+      const stderr = [];
+      const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, stderr);
+      expect(rt).to.equal(0);
+      expect(sshout).not.to.be.called;
+      expect(stderr).to.have.members(["hoge\n"]);
+    });
+    it("should execute single command with stdout and pass to call back routine", async()=>{
+      const rt = await arssh.exec(`echo ${testText}`, {}, sshout, ssherr);
+      expect(rt).to.equal(0);
+      expect(sshout).to.be.calledOnce;
+      expect(sshout).to.be.calledWithExactly("hoge\n");
+      expect(ssherr).not.to.be.called;
+    });
+    it("should execute single command with stderr and pass to call back routine", async()=>{
+      const stderr = [];
+      const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, ssherr);
+      expect(rt).to.equal(0);
+      expect(ssherr).to.be.calledOnce;
+      expect(ssherr).to.be.calledWithExactly("hoge\n");
+      expect(sshout).not.to.be.called;
+    });
+    it("should execute single command with stdout & stderr", async()=>{
+      const output = [];
+      const rt = await arssh.exec(`echo ${testText}; echo ${testText}>&2`, {}, output, output);
+      expect(rt).to.equal(0);
+      expect(output).to.have.members(["hoge\n", "hoge\n"]);
+    });
+    //please note that exec() resolves with non-zero value
+    //(126 permisssion deny or 127 file not found)
+    //but does not reject in following 2 cases
+    it("should not execute command which do not have exec permission", async()=>{
+      await arssh.exec("echo echo hoge >hoge");
+      await arssh.exec("chmod ugo-x hoge");
+      const rt = await arssh.exec("./hoge");
+      expect(rt).to.equal(126);
+    });
+    it("should reject if command is not found", async()=>{
+      const rt = await arssh.exec(`./${nonExisting}`, {});
+      expect(rt).to.equal(127);
+    });
   });
 });
