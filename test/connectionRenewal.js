@@ -84,6 +84,7 @@ describe("connection renewal functionality", function() {
       const stdout = [];
       let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
       expect(rt).to.equal(0);
+
       //after reconnect!!
       const p = [];
 
@@ -97,6 +98,7 @@ describe("connection renewal functionality", function() {
         })
       ).to.false;
       expect(rt).to.have.lengthOf(11);
+
       //please note stdout is rotated before adding new output if its length is more than 5
       //so, exec called total 12 times but stdout keep only last 6 results
       expect(stdout).to.have.members(["hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n"]);
@@ -110,6 +112,7 @@ describe("connection renewal functionality", function() {
         const stdout = [];
         let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
         expect(rt).to.equal(0);
+
         //after reconnect!!
         await arssh.send(localFiles[1], remoteEmptyDir);
         rt = await ssh.ls(remoteEmptyDir);
@@ -122,6 +125,7 @@ describe("connection renewal functionality", function() {
         const stdout = [];
         const rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
         expect(rt).to.equal(0);
+
         //after reconnect!!
         await arssh.recv(remoteFiles[4], localEmptyDir);
         expect(localEmptyDir)

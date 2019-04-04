@@ -56,6 +56,7 @@ async function isDir(target, ssh) {
 
 async function stat(target, ssh) {
   const output = [];
+
   //TODO check BSD
   const cmdline = process.platform === "darwin" ? `stat -f \'%Op\' ${target}` : `stat --format '%a' ${target}`;
   await ssh.exec(cmdline, {}, output, output);

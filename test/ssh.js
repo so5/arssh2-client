@@ -101,6 +101,7 @@ describe("test for ssh execution", function() {
       expect(rt).to.equal(0);
       expect(output).to.have.members(["hoge\n", "hoge\n"]);
     });
+
     //please note that exec() resolves with non-zero value
     //(126 permisssion deny or 127 file not found)
     //but does not reject in following 2 cases

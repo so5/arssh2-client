@@ -1,4 +1,5 @@
 const path = require("path");
+
 //setup test framework
 const chai = require("chai");
 const { expect } = require("chai");
@@ -117,6 +118,7 @@ describe.skip("ARsshClient stress test", function() {
         p.push(arssh.mkdir_p(path.posix.join(remoteRoot, nonExisting)));
       }
       const rt = await Promise.all(p);
+
       //check if all return value is undefined
       expect(rt).to.have.lengthOf(numExecSmall);
       expect(rt).to.all.eql(undefined);
@@ -180,6 +182,7 @@ describe.skip("ARsshClient stress test", function() {
       const expectedFiles = Array.from(Array(numExecSmall).keys()).map((e)=>{
         return e.toString();
       });
+
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingFiles = await arssh.ls(remoteEmptyDir);
       expect(remoteExistingFiles).to.have.members(expectedFiles);
@@ -201,6 +204,7 @@ describe.skip("ARsshClient stress test", function() {
       const expectedFiles = Array.from(Array(numExecSmall).keys()).map((e)=>{
         return e.toString();
       });
+
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingDirs = await arssh.ls(remoteEmptyDir);
       expect(remoteExistingDirs).to.have.members(expectedFiles);
@@ -251,6 +255,7 @@ describe.skip("ARsshClient stress test", function() {
       const expectedFiles = Array.from(Array(numExecSmall).keys()).map((e)=>{
         return e.toString();
       });
+
       //make sure localEmptyDir has 0 to numExecSmall files
       expect(localEmptyDir)
         .to.be.a.directory()
