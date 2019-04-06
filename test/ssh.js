@@ -54,7 +54,7 @@ describe("test for ssh execution", function() {
         }
       }
     });
-    it("should execute command repeatedly until output is match with specified regexp", async()=>{
+    it("should execute command repeatedly until output match with specified regexp", async()=>{
       const rt = await arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /hogehogehoge/, 10, 5, {}, sshout, ssherr);
       expect(rt).to.equal(0);
       expect(sshout).to.be.calledThrice;
@@ -62,6 +62,26 @@ describe("test for ssh execution", function() {
       expect(sshout.getCall(1)).to.be.calledWith("hogehoge");
       expect(sshout.getCall(2)).to.be.calledWith("hogehogehoge");
       expect(ssherr).not.to.be.called;
+    });
+    it("should execute command repeatedly until stdout match with specified regexp", async()=>{
+      const rt = await arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /hogehogehoge/ }, 10, 5, {}, sshout, ssherr);
+      expect(rt).to.equal(0);
+      expect(sshout).to.be.calledThrice;
+      expect(sshout.getCall(0)).to.be.calledWith("hoge");
+      expect(sshout.getCall(1)).to.be.calledWith("hogehoge");
+      expect(sshout.getCall(2)).to.be.calledWith("hogehogehoge");
+      expect(ssherr).to.be.calledThrice;
+      expect(ssherr).to.be.calledWith("hogehogehoge");
+    });
+    it("should execute command repeatedly until stderr match with specified regexp", async()=>{
+      const rt = await arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /hogehogehoge/ }, 10, 5, {}, sshout, ssherr);
+      expect(rt).to.equal(0);
+      expect(ssherr).to.be.calledThrice;
+      expect(ssherr.getCall(0)).to.be.calledWith("hoge");
+      expect(ssherr.getCall(1)).to.be.calledWith("hogehoge");
+      expect(ssherr.getCall(2)).to.be.calledWith("hogehogehoge");
+      expect(sshout).to.be.calledThrice;
+      expect(sshout).to.be.calledWith("hogehogehoge");
     });
   });
   describe("#exec", ()=>{
