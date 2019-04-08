@@ -83,6 +83,15 @@ describe("test for ssh execution", function() {
       expect(sshout).to.be.calledThrice;
       expect(sshout).to.be.calledWith("hogehogehoge");
     });
+    it("should be rejected if output does not matched with specified regexp", ()=>{
+      return expect(arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /foo/, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+    });
+    it("should be rejected if stdout does not matched with specified regexp", ()=>{
+      return expect(arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /foo/ }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+    });
+    it("should be rejected if stderr does not matched with specified regexp", ()=>{
+      return expect(arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /foo/ }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+    });
   });
   describe("#exec", ()=>{
     const testText = "hoge";
