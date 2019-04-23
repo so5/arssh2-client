@@ -25,7 +25,7 @@
     "fs-extra": "^7.0.1",
     "minimatch": "^3.0.4",
     "promise-retry": "^1.1.1",
-    "simple-batch-system": "^1.6.3",
+    "simple-batch-system": "^1.7.1",
     "ssh2": "^0.8.2"
   },
   "devDependencies": {
