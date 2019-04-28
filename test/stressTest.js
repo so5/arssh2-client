@@ -158,10 +158,10 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure localEmptyDir has numExecSmall copy of remoteRoot
       for (let i = 0; i < numExecSmall; i++) {
-        expect(path.join(localEmptyDir, i.toString()))
+        expect(path.join(localEmptyDir, i.toString(), remoteRoot))
           .to.be.a.directory()
           .with.files(["foo", "bar", "baz"]);
-        expect(path.join(localEmptyDir, i.toString(), "hoge"))
+        expect(path.join(localEmptyDir, i.toString(), remoteRoot, "hoge"))
           .to.be.a.directory()
           .with.files(["piyo", "puyo", "poyo"]);
       }
@@ -185,7 +185,7 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingFiles = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingFiles).to.have.members(expectedFiles);
+      expect(remoteExistingFiles.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
       expect(remoteExistingFiles).to.have.lengthOf(numExecSmall);
     });
     it("should put directory tree repeatedly", async()=>{
@@ -207,32 +207,25 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingDirs = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingDirs).to.have.members(expectedFiles);
+      expect(remoteExistingDirs.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
       expect(remoteExistingDirs).to.have.lengthOf(numExecSmall);
 
       for (const e in remoteExistingDirs) {
-        const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e));
-        expect(rt).to.have.members(["hoge", "huga", "foo", "bar", "baz"]);
+        const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge",  "foo", "bar", "baz"]);
       }
     });
     it("should execute command and get file repeatedly", async()=>{
-      const p = [];
+      const pSsh= [];
+      const pSftp= [];
 
       for (let i = 0; i < numExecSmall; i++) {
-        p.push(arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, i.toString())));
-        p.push(arssh.exec(`sleep 1&& echo ${testText} ${i}`, {}, sshout, ssherr));
-        p.push(arssh.recv(remoteFiles[3], path.join(localEmptyDir, i.toString())));
+        pSftp.push(arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, i.toString())));
+        pSsh.push(arssh.exec(`sleep 1&& echo ${testText} ${i}`, {}, sshout, ssherr));
+        pSftp.push(arssh.recv(remoteFiles[3], path.join(localEmptyDir, i.toString())));
       }
-      const rt = await Promise.all(p);
-
-      //check if all return value is 0
-      expect(rt).to.have.lengthOf(3 * numExecSmall);
-      const sshRt = rt.filter((e, i)=>{
-        return i % 3 === 1;
-      });
-      const sftpRt = rt.filter((e, i)=>{
-        return i % 3 !== 1;
-      });
+      const sshRt = await Promise.all(pSsh);
+      const sftpRt = await Promise.all(pSftp);
 
       expect(sftpRt).to.all.eql(undefined);
       expect(sshRt).to.all.eql(0);
@@ -263,7 +256,7 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingFiles = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingFiles).to.have.members(expectedFiles);
+      expect(remoteExistingFiles.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
       expect(remoteExistingFiles).to.have.lengthOf(numExecSmall);
     });
   });

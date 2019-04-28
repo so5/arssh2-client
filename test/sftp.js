@@ -72,7 +72,7 @@ describe("test for sftp subcommands", function() {
   let ssh; //house keeping
   before(async()=>{
     const config = await getConfig();
-    ssh = new ARsshClient(config);
+    ssh = new ARsshClient(config, {maxConnection: 1});
     arssh = new ARsshClient(config, { delay: 1000, connectionRetryDelay: 100 });
   });
   beforeEach(async()=>{
@@ -87,7 +87,6 @@ describe("test for sftp subcommands", function() {
     ssh.disconnect();
     arssh.disconnect();
   });
-
   describe("#realpath", ()=>{
     it("should return absolute path of existing directory", async()=>{
       const remoteHome = await arssh.realpath(".");
@@ -105,19 +104,23 @@ describe("test for sftp subcommands", function() {
       expect(rt).to.equal(path.posix.join(remoteHome, nonExisting));
     });
   });
-
   describe("#ls", ()=>{
-    it("should return array of file and directory names", async()=>{
-      expect(await arssh.ls(remoteRoot)).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
+    it("should return array of file and directory names in the specified directory", async()=>{
+      expect(await arssh.ls(remoteRoot)).to.have.members(["foo", "bar", "baz", "hoge", "huga"].map((e)=>{return path.posix.join(remoteRoot, e)}));
     });
-    it("should return array which has single file", async()=>{
-      expect(await arssh.ls(path.posix.join(remoteRoot, "foo"))).to.eql(["foo"]);
+    it("should return array which has only specified file", async()=>{
+      expect(await arssh.ls(path.posix.join(remoteRoot, "foo"))).to.eql([path.posix.join(remoteRoot, "foo")]);
     });
-    it("should return empty array", async()=>{
+    it("should return empty array if non-existing path is specified", async()=>{
       expect(await arssh.ls(path.posix.join(remoteRoot, nonExisting))).to.eql([]);
     });
+    it("should return only matched filenames, if glob is specified", async()=>{
+      expect(await arssh.ls(path.posix.join(remoteRoot, "b*"))).to.have.members(["bar","baz"].map((e)=>{return path.posix.join(remoteRoot, e)}));
+    });
+    it("should return only matched filenames src contains multipl glob pattern", async()=>{
+      expect(await arssh.ls(path.posix.join(remoteRoot, "h*", "p[iu]yo"))).to.have.members([path.posix.join(remoteRoot,"hoge","piyo"),path.posix.join(remoteRoot,"hoge","puyo")]);
+    }); 
   });
-
   describe("#chmod", function() {
     this.timeout(4000);
     it("should change file mode", async()=>{
@@ -179,60 +182,59 @@ describe("test for sftp subcommands", function() {
       }
     });
   });
-
   describe("#send", async()=>{
     describe("send single file", ()=>{
       it("should accept relative src file and relative dst dir name", async()=>{
         await arssh.send(localFiles[0], remoteEmptyDir);
 
         const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo"]);
       });
       it("should accept absolute src file and relative dst dir name", async()=>{
         await arssh.send(path.resolve(localFiles[3]), remoteEmptyDir);
 
         const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["piyo"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo"]);
       });
       it("should accept relative src file and absolute dst dir name", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(localFiles[0], path.posix.join(remoteHome, remoteEmptyDir));
 
         const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo"]);
       });
       it("should accept absolute src file and absolute dst dir name", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(path.resolve(localFiles[0]), path.posix.join(remoteHome, remoteEmptyDir));
 
         const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo"]);
       });
       it("should accept relative src file and relative dst file name", async()=>{
         await arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, "hoge"));
 
         const rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
       });
       it("should accept absolute src file and relative dst file name", async()=>{
         await arssh.send(path.resolve(localFiles[0]), path.posix.join(remoteEmptyDir, "hoge"));
 
         const rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
       });
       it("should accept relative src file and absolute dst file name", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(localFiles[0], path.posix.join(remoteHome, remoteEmptyDir, "hoge"));
 
         const rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
       });
       it("should accept absolute src file and absolute dst file name", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(path.resolve(localFiles[0]), path.posix.join(remoteHome, remoteEmptyDir, "hoge"));
 
         const rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
       });
 
       if (process.platform !== "win32") {
@@ -250,11 +252,11 @@ describe("test for sftp subcommands", function() {
         const target = path.posix.join(remoteEmptyDir, "hoge");
         await arssh.send(localFiles[0], target);
         let rt = await ssh.ls(target);
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
 
         await arssh.send(localFiles[1], target);
         rt = await ssh.ls(target);
-        expect(rt).to.have.members(["hoge"]);
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge"]);
         const output = [];
         await arssh.exec(`cat ${target}`, {}, output, output);
         rt = output.join();
@@ -265,36 +267,36 @@ describe("test for sftp subcommands", function() {
       it("should accept relative src dirname and relative dst dirname", async()=>{
         await arssh.send(localRoot, remoteEmptyDir);
 
-        const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
+        const rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "bar", "baz", "hoge"]);
+        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt2.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept absolute src dirname and relative dst dirname", async()=>{
         await arssh.send(path.resolve(localRoot), remoteEmptyDir);
 
-        const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
+        const rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "bar", "baz", "hoge"]);
+        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt2.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept relative src dirname and absolute dst dirname", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(localRoot, path.posix.join(remoteHome, remoteEmptyDir));
 
-        const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
+        const rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "bar", "baz", "hoge"]);
+        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt2.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept absolute src dirname and absolute dst dirname", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.send(path.resolve(localRoot), path.posix.join(remoteHome, remoteEmptyDir));
 
-        const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
+        const rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "bar", "baz", "hoge"]);
+        const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt2.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
       });
 
       if (process.platform !== "win32") {
@@ -303,67 +305,57 @@ describe("test for sftp subcommands", function() {
           await fs.chmod(localFiles[0], perm);
           await arssh.send(localRoot, remoteEmptyDir);
 
-          const rt = await ssh.ls(remoteEmptyDir);
-          expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-          const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-          expect(rt2).to.have.members(["piyo", "puyo", "poyo"]);
-          expect(await stat(path.posix.join(remoteEmptyDir, "foo"), ssh)).to.be.equal(perm);
+          const rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+          expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "bar", "baz", "hoge"]);
+          const rt2 = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+          expect(rt2.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
+          expect(await stat(path.posix.join(remoteEmptyDir, localRoot, "foo"), ssh)).to.be.equal(perm);
         });
       }
       it("should send directory tree if only filter matched", async()=>{
         await arssh.send(localRoot, remoteEmptyDir, "*/{ba*,hoge/*}");
 
-        let rt = await ssh.ls(path.posix.join(remoteEmptyDir));
-        expect(rt).to.have.members(["hoge", "bar", "baz", "huga"]);
-        rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+        let rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge", "bar", "baz"]);
+        rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should send directory tree if exclude filter not matched", async()=>{
         await arssh.send(localRoot, remoteEmptyDir, null, "*/{ba*,hoge*}");
 
-        const rt = await ssh.ls(path.posix.join(remoteEmptyDir));
-        expect(rt).to.have.members(["foo", "hoge", "huga"]);
+        let rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["foo", "hoge"]);
       });
       it("should send directory tree if only filter matched but exclude filter not matched", async()=>{
         await arssh.send(localRoot, remoteEmptyDir, "*/{ba*,hoge/*}", "**/poyo");
 
-        let rt = await ssh.ls(path.posix.join(remoteEmptyDir));
-        expect(rt).to.have.members(["hoge", "bar", "baz", "huga"]);
-        rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["piyo", "puyo"]);
+        let rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge", "bar", "baz"]);
+        rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot, "hoge"));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["piyo", "puyo"]);
       });
       it("shoud send empty directory", async()=>{
         await arssh.send(localEmptyDir, remoteEmptyDir);
 
-        const rt = await ssh.ls(remoteEmptyDir);
-        expect(rt).to.have.lengthOf(0);
+        let rt = await ssh.ls(path.posix.join(remoteEmptyDir, localRoot));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.lengthOf(0);
+      });
+      it("should send files which match glob pattern", async()=>{
+        await arssh.send(path.join(localRoot, "b*"), remoteEmptyDir);
+        
+        let rt = await ssh.ls(path.posix.join(remoteEmptyDir));
+        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["bar", "baz"]);
       });
     });
     describe("error case", ()=>{
-      it("should not send directory to existing file path", async()=>{
-        await arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, "hoge"));
-        const rt = await ssh.ls(path.posix.join(remoteEmptyDir, "hoge"));
-        expect(rt).to.have.members(["hoge"]);
-
-        try {
-          await arssh.send(localRoot, path.posix.join(remoteEmptyDir, "hoge"));
-          expect.fail();
-        } catch (e) {
-          expect(e).to.be.an("error");
-          expect(e.message).to.equal("destination path must not be existing file");
-        }
+      it("should not send directory to existing file path", ()=>{
+        return expect(arssh.send(localRoot, path.posix.join(remoteRoot, "foo"))).to.be.rejectedWith("destination path must not be existing file");
       });
-      it("should reject if src file does not exist", async()=>{
-        try {
-          await arssh.send(path.join(localRoot, nonExisting), remoteEmptyDir);
-          expect.fail();
-        } catch (e) {
-          expect(e.message).to.equal("src must be existing file or directory");
-        }
+      it("should reject if src file does not exist", ()=>{
+        return expect(arssh.send(path.join(localRoot, nonExisting), remoteEmptyDir)).to.be.rejectedWith("src must be existing file or directory");
       });
     });
   });
-
   describe("#recv", async()=>{
     describe("recieve single file", ()=>{
       it("should accept relative src file and relative dst dir name", async()=>{
@@ -418,59 +410,76 @@ describe("test for sftp subcommands", function() {
         const rt = await fs.readdir(localEmptyDir);
         expect(rt).to.have.members(["hoge"]);
       });
+      it("should accept glob pattern as src", async()=>{
+        await arssh.recv(path.posix.join(remoteRoot, "b*"), path.resolve(localEmptyDir));
+        const rt = await fs.readdir(localEmptyDir);
+        expect(rt).to.have.members(["bar", "baz"]);
+      });
+      it("should accept glob pattern as src", async()=>{
+        await arssh.recv(path.posix.join(remoteRoot, "*/p[iu]yo"), path.resolve(localEmptyDir));
+        const rt = await fs.readdir(localEmptyDir);
+        expect(rt).to.have.members(["piyo", "puyo"]);
+      });
     });
     describe("recieve directory tree", ()=>{
+      it("should get directory tree which match specified glob", async()=>{
+        await arssh.recv(path.posix.join(remoteRoot,'?o*'), localEmptyDir);
+        let rt = await fs.readdir(localEmptyDir);
+        expect(rt).to.have.members(["foo", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
+      });
       it("should accept relative src dirname and relative dst dirname", async()=>{
         await arssh.recv(remoteRoot, localEmptyDir);
 
-        let rt = await fs.readdir(localEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir,remoteRoot, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept absolute src dirname and relative dst dirname", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.recv(path.posix.join(remoteHome, remoteRoot), localEmptyDir);
 
-        let rt = await fs.readdir(localEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, remoteRoot, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept relative src dirname and absolute dst dirname", async()=>{
         await arssh.recv(remoteRoot, path.resolve(localEmptyDir));
 
-        let rt = await fs.readdir(localEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, remoteRoot, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should accept absolute src dirname and absolute dst dirname", async()=>{
         const remoteHome = await arssh.realpath(".");
         await arssh.recv(path.posix.join(remoteHome, remoteRoot), path.resolve(localEmptyDir));
 
-        let rt = await fs.readdir(localEmptyDir);
-        expect(rt).to.have.members(["foo", "bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["foo", "bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, remoteRoot, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should recv files which matches only filter", async()=>{
         await arssh.recv(remoteRoot, localEmptyDir, "*/{ba*,hoge/*}");
-        let rt = await fs.readdir(path.join(localEmptyDir));
-        expect(rt).to.have.members(["bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, remoteRoot, "hoge"));
         expect(rt).to.have.members(["piyo", "puyo", "poyo"]);
       });
       it("should not recv files which matches exclude filter", async()=>{
         await arssh.recv(remoteRoot, localEmptyDir, null, "*/{ba*,hoge/*}");
-        const rt = await fs.readdir(path.join(localEmptyDir));
-        expect(rt).to.have.members(["foo", "hoge", "huga"]);
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["foo"]);
       });
       it("should recv files which matches only filter but should not recv which matches exclude filter", async()=>{
         await arssh.recv(remoteRoot, localEmptyDir, "*/{ba*,hoge/*}", "**/piyo");
-        let rt = await fs.readdir(path.join(localEmptyDir));
-        expect(rt).to.have.members(["bar", "baz", "hoge", "huga"]);
-        rt = await fs.readdir(path.join(localEmptyDir, "hoge"));
+        let rt = await fs.readdir(path.posix.join(localEmptyDir,remoteRoot));
+        expect(rt).to.have.members(["bar", "baz", "hoge"]);
+        rt = await fs.readdir(path.join(localEmptyDir, remoteRoot, "hoge"));
         expect(rt).to.have.members(["puyo", "poyo"]);
       });
     });
