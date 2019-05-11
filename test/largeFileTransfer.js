@@ -33,7 +33,7 @@ const getConfig = require("./util/config");
 const remoteLargeFile = `${remoteRoot}/remoteLargeFile`;
 const localLargeFile = path.resolve(localRoot, "localLargeFile");
 
-describe.only("largefile handle test", async function() {
+describe.skip("largefile handle test", async function() {
   this.timeout(0);
   //global variables
   let arssh; //testee
@@ -56,7 +56,7 @@ describe.only("largefile handle test", async function() {
         resolve();
       });
     });
-    for (let i = 0; i < 4000000; i++) {
+    for (let i = 0; i < 6000000; i++) {
       ws.write(`${`10000000000000000000000000000000${i}`.slice(-31)}\n`);
     }
     ws.end();

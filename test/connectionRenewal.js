@@ -116,7 +116,9 @@ describe("connection renewal functionality", function() {
         //after reconnect!!
         await arssh.send(localFiles[1], remoteEmptyDir);
         rt = await ssh.ls(remoteEmptyDir);
-        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["bar"]);
+        expect(rt.map((e)=>{
+          return path.posix.basename(e);
+        })).to.have.members(["bar"]);
         expect(arssh.numReconnect).to.equal(1);
       });
     });

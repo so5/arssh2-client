@@ -185,7 +185,9 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingFiles = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingFiles.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
+      expect(remoteExistingFiles.map((e)=>{
+        return path.posix.basename(e);
+      })).to.have.members(expectedFiles);
       expect(remoteExistingFiles).to.have.lengthOf(numExecSmall);
     });
     it("should put directory tree repeatedly", async()=>{
@@ -207,17 +209,21 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingDirs = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingDirs.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
+      expect(remoteExistingDirs.map((e)=>{
+        return path.posix.basename(e);
+      })).to.have.members(expectedFiles);
       expect(remoteExistingDirs).to.have.lengthOf(numExecSmall);
 
       for (const e in remoteExistingDirs) {
         const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e, localRoot));
-        expect(rt.map((e)=>{return path.posix.basename(e)})).to.have.members(["hoge",  "foo", "bar", "baz"]);
+        expect(rt.map((e)=>{
+          return path.posix.basename(e);
+        })).to.have.members(["hoge", "foo", "bar", "baz"]);
       }
     });
     it("should execute command and get file repeatedly", async()=>{
-      const pSsh= [];
-      const pSftp= [];
+      const pSsh = [];
+      const pSftp = [];
 
       for (let i = 0; i < numExecSmall; i++) {
         pSftp.push(arssh.send(localFiles[0], path.posix.join(remoteEmptyDir, i.toString())));
@@ -256,7 +262,9 @@ describe.skip("ARsshClient stress test", function() {
 
       //make sure remoteEmptyDir has 0 to numExecSmall files
       const remoteExistingFiles = await arssh.ls(remoteEmptyDir);
-      expect(remoteExistingFiles.map((e)=>{return path.posix.basename(e)})).to.have.members(expectedFiles);
+      expect(remoteExistingFiles.map((e)=>{
+        return path.posix.basename(e);
+      })).to.have.members(expectedFiles);
       expect(remoteExistingFiles).to.have.lengthOf(numExecSmall);
     });
   });
