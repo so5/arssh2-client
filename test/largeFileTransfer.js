@@ -56,7 +56,7 @@ describe.skip("largefile handle test", async function() {
         resolve();
       });
     });
-    for (let i = 0; i < 6000000; i++) {
+    for (let i = 0; i < 4000; i++) {
       ws.write(`${`10000000000000000000000000000000${i}`.slice(-31)}\n`);
     }
     ws.end();
@@ -71,8 +71,8 @@ describe.skip("largefile handle test", async function() {
 
   describe("#send", async()=>{
     describe("send single file", ()=>{
-      it("should send over 32kB file", async()=>{
-        await arssh.send(localLargeFile, remoteEmptyDir);
+      it("should send over 128kB file", async()=>{
+        await arssh.send(localRoot, remoteEmptyDir);
       });
     });
   });
