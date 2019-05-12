@@ -18,4 +18,4 @@ arssh2-client is auto recovery ssh client wrapper for ssh2(https://github.com/ms
 - support glob for file transfer functions
 
 # API
-plase check separate docment(./API.md)
+please check separate [docment](./API.md).
