@@ -34,7 +34,7 @@
     "chai-fs": "^2.0.0",
     "coveralls": "^3.0.2",
     "cross-env": "^5.2.0",
-    "del": "^4.1.0",
+    "del": "^5.0.0",
     "eslint": "^5.16.0",
     "eslint-config-eslint": "^5.0.1",
     "eslint-plugin-chai-expect": "^2.0.1",
