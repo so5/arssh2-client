@@ -21,6 +21,9 @@ before_script:
 
 after_success: npm run coverage
 jobs:
+  allow_failures:
+    - os: osx
+    - os: windows
   include:
   - stage: npm publish
     node_js: lts/*
