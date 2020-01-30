@@ -48,12 +48,20 @@ const {
 
 const getConfig = require("./util/config");
 
+/**
+ * @param target
+ * @param ssh
+ */
 async function isDir(target, ssh) {
   const output = [];
   await ssh.exec(`ls -ld ${target}`, {}, output, output);
   return output[0].startsWith("d");
 }
 
+/**
+ * @param target
+ * @param ssh
+ */
 async function stat(target, ssh) {
   const output = [];
 
@@ -170,12 +178,7 @@ describe("test for sftp subcommands", function() {
       expect(await isDir(target, ssh)).to.be.true;
     });
     it("should rejected if target path is existing file", async()=>{
-      try {
-        await arssh.mkdir_p(remoteFiles[0]);
-        expect.fail();
-      } catch (e) {
-        expect(e.code).to.equal("EEXIST");
-      }
+      return expect(arssh.mkdir_p(remoteFiles[0])).to.be.rejectedWith(Error, /attempt to create directory on existing path/);
     });
     it("should reject if making child dir of not-owned directory", async()=>{
       try {
