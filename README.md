@@ -41,4 +41,5 @@ available namespace is as follows
 - arssh2:sshExec
 
 and following namespace is used underlying libraries
+- arssh2:ssh2
 - sbs:sbs
