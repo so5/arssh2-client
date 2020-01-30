@@ -19,3 +19,26 @@ arssh2-client is auto recovery ssh client wrapper for ssh2(https://github.com/ms
 
 # API
 plase check separate docment(./API.md)
+
+# verbose log
+arssh2-client use debug module to write all debug output.
+you can enable all debug output to set DEBUG environment variable as follows
+
+```
+#"app.js" is your app using arssh2-licent library
+
+#for Linux,mac
+DEBUG=arssh2* node app.js
+#for windows power shell
+$env:DEBUG='arssh2*';node app.js
+```
+
+available namespace is as follows
+- arssh2:arssh2
+- arssh2:jobs
+- arssh2:connection-manager
+- arssh2:sftpUtil
+- arssh2:sshExec
+
+and following namespace is used underlying libraries
+- sbs:sbs
