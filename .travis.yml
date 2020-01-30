@@ -14,12 +14,10 @@ env:
   global:
     - ARSSH_TEST_KEYFILE=~/.ssh/id_rsa_for_test
 before_script:
-  - pwd
-  - cat /etc/ssh/sshd_config
   - ssh-keygen -P "" -f ~/.ssh/id_rsa_for_test
   - cat  ~/.ssh/id_rsa_for_test.pub >> ~/.ssh/authorized_keys
   - ls -l ~/.ssh/
-  - ssh localhost -i  ~/.ssh/id_rsa_for_test date
+  - ssh localhost -oStrictHostKeyChecking=no -i ~/.ssh/id_rsa_for_test date
 
 after_success: npm run coverage
 jobs:
