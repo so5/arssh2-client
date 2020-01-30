@@ -1,6 +1,6 @@
 {
   "name": "arssh2-client",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "ssh2 client wrapper with auto-recovery functionality",
   "author": {
     "name": "Naoyuki Sogo"
