@@ -10,6 +10,10 @@ os:
 - linux
 - osx
 - windows
+before_script:
+  - pwd
+  - cat /etc/ssh/sshd_conf
+  - ssh-keygen -P "" -f ~/.ssh/id_rsa_for_test
 
 after_success: npm run coverage
 jobs:
@@ -41,7 +45,8 @@ notifications:
   slack:
     secure: dw5pTcP0FwtoCsEi0FC5m6/gSxA/yueUj2iNQ/y6DYqx0peXLJjJiMvW+HyWNrvgx85aObszDhBD4HnR05ENo1+0p8UWUqHmgjsRbZWUc4yrftGMa7OW8CC6gmKakPYyyukS1S4r1P0PYG1mUCUTkhz+e9/fI3od2FA1tH5+p94OFO74+u0Ppq4/bwrCzRzwhscrP1KPVuD+6p5vmZ+p37ZU6aapUv+MJujtN4qdDUos2GUjONc6JS/mm+gQ2T/WC7UbQe4aFSQsv42VH/HBDedDS83Qvqa0c2hrBmpLQFDNJ8e2Wc1997OKclkfDYJWzcV+ah1eOtlj1iX2NPIkHi5hq5lOAeUr4pgtoK+yIjuBUH9Uy9Xr9Pll6h0bIdU+/vCe61FTBAfKdZGuclUhmZJih7vZP481B3OoreDV4e0CU/NtguwkyiJsYNQ8/L0/oXx/5BxMjl9MW0EJ9h1oiUiBnKk3B83W5k0rVg7mZj06WHG9kL9bgRjCGl/733msTODPR1nEV7aNUdTos09iNRciu6p5Cc/vdi9/RvEvQSPVbWiX9Qvb6I4b7ryWgir1JSVf29BI3nOvk1L1kA8/cXwghGHNYSp+bjXgVOC+XuA/kbfi+n4KkAIN1/yJS7qhfl0V8At0quAtJ9QeV39gQOn1drV+vCuS+2qpSeOn57E=
 services:
-- docker
-before_script:
-- docker  build -t sshd ./test
-- docker run -p 4567:22 -d sshd
+  - sshd
+    #- docker
+  #before_script:
+  #- docker  build -t sshd ./test
+  #- docker run -p 4567:22 -d sshd
