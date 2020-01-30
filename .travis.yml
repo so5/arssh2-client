@@ -12,8 +12,9 @@ os:
 - windows
 before_script:
   - pwd
-  - cat /etc/ssh/sshd_conf
+  - cat /etc/ssh/sshd_config
   - ssh-keygen -P "" -f ~/.ssh/id_rsa_for_test
+  - ls -l ~/.ssh/
 
 after_success: npm run coverage
 jobs:
