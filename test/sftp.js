@@ -487,6 +487,11 @@ describe("test for sftp subcommands", function() {
         const rt = await fs.readdir(localEmptyDir);
         expect(rt).to.have.members(["piyo", "puyo"]);
       });
+      it("should accept glob pattern as src", async()=>{
+        await arssh.recv(path.posix.join(remoteRoot, "{hoge/p[iu]yo,foo}"), path.resolve(localEmptyDir));
+        const rt = await fs.readdir(localEmptyDir);
+        expect(rt).to.have.members(["piyo", "puyo", "foo"]);
+      });
     });
     describe("recieve directory tree", ()=>{
       it("should get directory tree which match specified glob", async()=>{
