@@ -1,4 +1,3 @@
-const fs = require("fs-extra");
 const path = require("path");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
@@ -35,15 +34,12 @@ const ARsshClient = require("../lib/index.js");
 
 //helper
 const {
-  nonExisting,
   clearLocalTestFiles,
   clearRemoteTestFiles,
   createLocalFiles,
-  localRoot,
   localEmptyDir,
   localFiles,
   createRemoteFiles,
-  remoteRoot,
   remoteEmptyDir,
   remoteFiles
 } = require("./util/testFiles");

@@ -15,17 +15,13 @@ const ARsshClient = require("../lib/index.js");
 
 //helper
 const {
-  nonExisting,
   clearLocalTestFiles,
   clearRemoteTestFiles,
   createLocalFiles,
   localRoot,
-  localEmptyDir,
-  localFiles,
   createRemoteFiles,
   remoteRoot,
-  remoteEmptyDir,
-  remoteFiles
+  localEmptyDir
 } = require("./util/testFiles");
 
 const getConfig = require("./util/config");
@@ -33,7 +29,7 @@ const getConfig = require("./util/config");
 const remoteLargeFile = `${remoteRoot}/remoteLargeFile`;
 const localLargeFile = path.resolve(localRoot, "localLargeFile");
 
-describe.skip("largefile handle test", async function() {
+describe("largefile handle test", async function() {
   this.timeout(0);
   //global variables
   let arssh; //testee
@@ -48,8 +44,6 @@ describe.skip("largefile handle test", async function() {
     await createRemoteFiles(ssh);
     await clearLocalTestFiles();
     await createLocalFiles();
-
-    //await ssh.exec(`for i in \`seq -w 0000000000000000000000000000001 0000000000000000000000000003000\`; do echo $i >> ${remoteLargeFile};done`);
     const ws = fs.createWriteStream(localLargeFile);
     const p = new Promise((resolve)=>{
       ws.on("close", ()=>{
@@ -63,16 +57,18 @@ describe.skip("largefile handle test", async function() {
     await p;
   });
   after(async()=>{
-    //await clearRemoteTestFiles(ssh);
-    //await clearLocalTestFiles();
+    await clearRemoteTestFiles(ssh);
+    await clearLocalTestFiles();
     ssh.disconnect();
     arssh.disconnect();
   });
 
   describe("#send", async()=>{
     describe("send single file", ()=>{
-      it("should send over 128kB file", async()=>{
-        await arssh.send(localRoot, remoteEmptyDir);
+      it("should send and recieve over 128kB file", async()=>{
+        await arssh.send(localLargeFile, remoteLargeFile);
+        await arssh.recv(remoteLargeFile, localEmptyDir);
+        expect(path.join(localEmptyDir, "remoteLargeFile")).to.be.a.file().and.equal(localLargeFile);
       });
     });
   });

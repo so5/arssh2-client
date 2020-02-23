@@ -1,7 +1,3 @@
-const { promisify } = require("util");
-const fs = require("fs");
-const path = require("path");
-
 //setup test framework
 const chai = require("chai");
 const { expect } = require("chai");
@@ -117,7 +113,6 @@ describe("test for ssh execution", function() {
       expect(ssherr).not.to.be.called;
     });
     it("should execute single command with stderr and pass to call back routine", async()=>{
-      const stderr = [];
       const rt = await arssh.exec(`echo ${testText} >&2`, {}, sshout, ssherr);
       expect(rt).to.equal(0);
       expect(ssherr).to.be.calledOnce;

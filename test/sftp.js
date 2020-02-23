@@ -49,8 +49,8 @@ const {
 const getConfig = require("./util/config");
 
 /**
- * @param target
- * @param ssh
+ * @param {string} target - Path to be checked.
+ * @param {object} ssh - Instance of arssh2-client.
  */
 async function isDir(target, ssh) {
   const output = [];
@@ -59,14 +59,12 @@ async function isDir(target, ssh) {
 }
 
 /**
- * @param target
- * @param ssh
+ * @param {string} target - Path to be checked.
+ * @param {object} ssh - Instance of arssh2-client.
  */
 async function stat(target, ssh) {
   const output = [];
-
-  //TODO check BSD
-  const cmdline = process.platform === "darwin" ? `stat -f \'%Op\' ${target}` : `stat --format '%a' ${target}`;
+  const cmdline = process.platform === "darwin" ? `stat -f '%Op' ${target}` : `stat --format '%a' ${target}`;
   await ssh.exec(cmdline, {}, output, output);
   return output[0].trim().slice(-3);
 }

@@ -1,11 +1,7 @@
-const { promisify } = require("util");
-const path = require("path");
-
 Error.traceLimit = 100000;
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
 //setup test framework
-const chai = require("chai");
 const { expect } = require("chai");
 
 //testee

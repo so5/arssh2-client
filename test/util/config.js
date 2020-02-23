@@ -7,7 +7,7 @@ async function getConfig() {
     port: process.env.ARSSH_TEST_PORT || 22
   };
 
-  if (process.env.hasOwnProperty("ARSSH_TEST_KEYFILE")) {
+  if (Object.prototype.hasOwnProperty.call(process.env, "ARSSH_TEST_KEYFILE")) {
     const keyFile = process.env.ARSSH_TEST_KEYFILE;
     config.privateKey = (await fs.readFile(keyFile)).toString();
     config.passphrase = process.env.ARSSH_TEST_PW || "";
