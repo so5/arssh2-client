@@ -130,11 +130,13 @@ describe("test for sftp subcommands", function() {
       }));
     });
     it("should return only matched filenames src contains multipl glob pattern", async()=>{
-      expect(await arssh.ls(path.posix.join(remoteRoot, "h*", "p[iu]yo"))).to.have.members([path.posix.join(remoteRoot, "hoge", "piyo"), path.posix.join(remoteRoot, "hoge", "puyo")]);
+      expect(await arssh.ls(path.posix.join(remoteRoot, "h*", "p[iu]yo"))).to.have.members(["piyo", "puyo"].map((e)=>{
+        return path.posix.join(remoteRoot, "hoge", e);
+      }));
     });
-    it.only("should return only matched filenames, if specified glob contains /", async()=>{
+    it("should return only matched filenames, if specified glob contains /", async()=>{
       expect(await arssh.ls(path.posix.join(remoteRoot, "hoge/*yo"))).to.have.members(["piyo", "puyo", "poyo"].map((e)=>{
-        return path.posix.join(remoteRoot, e);
+        return path.posix.join(remoteRoot, "hoge", e);
       }));
     });
   });
