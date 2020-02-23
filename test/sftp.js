@@ -50,7 +50,7 @@ const getConfig = require("./util/config");
 
 /**
  * @param {string} target - Path to be checked.
- * @param {object} ssh - Instance of arssh2-client.
+ * @param {Object} ssh - Instance of arssh2-client.
  */
 async function isDir(target, ssh) {
   const output = [];
@@ -60,7 +60,7 @@ async function isDir(target, ssh) {
 
 /**
  * @param {string} target - Path to be checked.
- * @param {object} ssh - Instance of arssh2-client.
+ * @param {Object} ssh - Instance of arssh2-client.
  */
 async function stat(target, ssh) {
   const output = [];
