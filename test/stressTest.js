@@ -1,3 +1,4 @@
+"use strict";
 const path = require("path");
 
 //setup test framework
@@ -47,7 +48,7 @@ const getConfig = require("./util/config");
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
 describe.skip("ARsshClient stress test", function() {
-  this.timeout(0);
+  this.timeout(0);//eslint-disable-line no-invalid-this
   //global variables
   let arssh;
   const sshout = sinon.stub();
@@ -89,7 +90,7 @@ describe.skip("ARsshClient stress test", function() {
       const expectedResults = [];
 
       for (let i = 0; i < numExec; i++) {
-        expectedResults.push(`${testText} ${i}` + "\n");
+        expectedResults.push(`${testText} ${i}\n`);
       }
       expect(results).to.have.members(expectedResults);
     });

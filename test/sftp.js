@@ -1,3 +1,4 @@
+"use strict";
 const fs = require("fs-extra");
 const path = require("path");
 
@@ -72,7 +73,7 @@ async function stat(target, ssh) {
 
 //actual test start from here
 describe("test for sftp subcommands", function() {
-  this.timeout(10000);
+  this.timeout(10000);//eslint-disable-line no-invalid-this
   //global variables
   let arssh; //testee
   let ssh; //house keeping
@@ -139,7 +140,7 @@ describe("test for sftp subcommands", function() {
     });
   });
   describe("#chmod", function() {
-    this.timeout(4000);
+    this.timeout(4000);//eslint-disable-line no-invalid-this
     it("should change file mode", async()=>{
       await arssh.chmod(remoteFiles[0], "700");
       let output = [];
@@ -158,32 +159,32 @@ describe("test for sftp subcommands", function() {
       const target = `${remoteRoot}/hogehoge`;
       const rt = await arssh.mkdir_p(target);
 
-      expect(rt).to.eql(undefined);
+      expect(rt).to.be.an("undefined");
       expect(await isDir(target, ssh)).to.be.true;
     });
     it("should make child dir of non-existing directory with trailing pathsep", async()=>{
       const target = `${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga/`;
       const rt = await arssh.mkdir_p(target);
 
-      expect(rt).to.eql(undefined);
+      expect(rt).to.be.an("undefined");
       expect(await isDir(target, ssh)).to.be.true;
     });
     it("should make child dir of non-existing directory", async()=>{
       const target = `${remoteRoot}/${nonExisting}/hogehoge/foo/bar/baz/huga`;
       const rt = await arssh.mkdir_p(target);
 
-      expect(rt).to.eql(undefined);
+      expect(rt).to.be.an("undefined");
       expect(await isDir(target, ssh)).to.be.true;
     });
     it("should resolve with undefined if making existing directory", async()=>{
       const target = remoteRoot;
       const rt = await arssh.mkdir_p(target);
 
-      expect(rt).to.eql(undefined);
+      expect(rt).to.be.an("undefined");
       expect(await isDir(target, ssh)).to.be.true;
     });
     it("should rejected if target path is existing file", async()=>{
-      return expect(arssh.mkdir_p(remoteFiles[0])).to.be.rejectedWith(Error, /attempt to create directory on existing path/);
+      return expect(arssh.mkdir_p(remoteFiles[0])).to.be.rejectedWith(Error, /attempt to create directory on existing path/u);
     });
     it("should reject if making child dir of not-owned directory", async()=>{
       try {

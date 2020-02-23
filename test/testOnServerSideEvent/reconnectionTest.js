@@ -1,8 +1,9 @@
+"use strict";
 const { fs } = require("fs-extra");
 const { expect } = require("chai");
 
-const ARsshClient = require("../lib/index.js");
-const { sleep } = require("../lib/utils");
+const ARsshClient = require("../../lib/index.js");
+const { sleep } = require("../../lib/utils");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
@@ -11,7 +12,7 @@ let config = null;
 let arssh = null;
 
 describe("reconnect test", function() {
-  this.timeout(0);
+  this.timeout(0);//eslint-disable-line no-invalid-this
   let privateKey;
   before(async()=>{
     const keyFile = `${process.env.HOME}/.vagrant.d/insecure_private_key`;

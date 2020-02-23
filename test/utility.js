@@ -1,3 +1,4 @@
+"use strict";
 Error.traceLimit = 100000;
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
 
@@ -11,7 +12,7 @@ const ARsshClient = require("../lib/index.js");
 const getConfig = require("./util/config");
 
 describe("test for utility functions", function() {
-  this.timeout(5000);
+  this.timeout(5000); //eslint-disable-line no-invalid-this
   //global variables
   let arssh;
   let config;
@@ -42,7 +43,7 @@ describe("test for utility functions", function() {
         });
     });
     it("should be rejected if user is undefined", async()=>{
-      config.username = undefined;
+      delete (config.username);
       const arssh2 = new ARsshClient(config, { connectionRetryDelay: 100 });
       await arssh2
         .canConnect()
@@ -53,8 +54,8 @@ describe("test for utility functions", function() {
     });
     it("should be rejected if password is wrong", async()=>{
       config.password = "";
-      config.passphrase = undefined;
-      config.privateKey = undefined;
+      delete (config.passphrase);
+      delete (config.privateKey);
       const arssh2 = new ARsshClient(config, { connectionRetryDelay: 100 });
       await arssh2
         .canConnect()

@@ -1,3 +1,5 @@
+"use strict";
+
 //setup test framework
 const chai = require("chai");
 const { expect } = require("chai");
@@ -12,7 +14,7 @@ const getConfig = require("./util/config");
 const { nonExisting, remoteRoot } = require("./util/testFiles");
 
 describe("test for ssh execution", function() {
-  this.timeout(10000);
+  this.timeout(10000);//eslint-disable-line no-invalid-this
 
   //global variables
   let arssh; //testee
@@ -51,7 +53,7 @@ describe("test for ssh execution", function() {
       }
     });
     it("should execute command repeatedly until output match with specified regexp", async()=>{
-      const rt = await arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /hogehogehoge/, 10, 5, {}, sshout, ssherr);
+      const rt = await arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /hogehogehoge/u, 10, 5, {}, sshout, ssherr);
       expect(rt).to.equal(0);
       expect(sshout).to.be.calledThrice;
       expect(sshout.getCall(0)).to.be.calledWith("hoge");
@@ -60,7 +62,7 @@ describe("test for ssh execution", function() {
       expect(ssherr).not.to.be.called;
     });
     it("should execute command repeatedly until stdout match with specified regexp", async()=>{
-      const rt = await arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /hogehogehoge/ }, 10, 5, {}, sshout, ssherr);
+      const rt = await arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /hogehogehoge/u }, 10, 5, {}, sshout, ssherr);
       expect(rt).to.equal(0);
       expect(sshout).to.be.calledThrice;
       expect(sshout.getCall(0)).to.be.calledWith("hoge");
@@ -70,7 +72,7 @@ describe("test for ssh execution", function() {
       expect(ssherr).to.be.calledWith("hogehogehoge");
     });
     it("should execute command repeatedly until stderr match with specified regexp", async()=>{
-      const rt = await arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /hogehogehoge/ }, 10, 5, {}, sshout, ssherr);
+      const rt = await arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /hogehogehoge/u }, 10, 5, {}, sshout, ssherr);
       expect(rt).to.equal(0);
       expect(ssherr).to.be.calledThrice;
       expect(ssherr.getCall(0)).to.be.calledWith("hoge");
@@ -80,13 +82,13 @@ describe("test for ssh execution", function() {
       expect(sshout).to.be.calledWith("hogehogehoge");
     });
     it("should be rejected if output does not matched with specified regexp", ()=>{
-      return expect(arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /foo/, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+      return expect(arssh.watch(`echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, /foo/u, 10, 2, {}, sshout, ssherr)).to.be.rejected;
     });
     it("should be rejected if stdout does not matched with specified regexp", ()=>{
-      return expect(arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /foo/ }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+      return expect(arssh.watch(`echo -n hogehogehoge >&2 && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp`, { out: /foo/u }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
     });
     it("should be rejected if stderr does not matched with specified regexp", ()=>{
-      return expect(arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /foo/ }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
+      return expect(arssh.watch(`echo -n hogehogehoge && echo -n hoge >> ${remoteRoot}/tmp && cat ${remoteRoot}/tmp >&2`, { err: /foo/u }, 10, 2, {}, sshout, ssherr)).to.be.rejected;
     });
   });
   describe("#exec", ()=>{

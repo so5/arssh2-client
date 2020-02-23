@@ -1,3 +1,4 @@
+"use strict";
 const path = require("path");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
@@ -49,7 +50,7 @@ const sshout = sinon.stub();
 const ssherr = sinon.stub();
 
 describe("connection renewal functionality", function() {
-  this.timeout(0);
+  this.timeout(0); //eslint-disable-line no-invalid-this
   let ssh;
   let arssh;
   const testText = "hoge";

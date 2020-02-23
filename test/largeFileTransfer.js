@@ -1,3 +1,4 @@
+"use strict";
 const fs = require("fs-extra");
 const path = require("path");
 
@@ -30,7 +31,7 @@ const remoteLargeFile = `${remoteRoot}/remoteLargeFile`;
 const localLargeFile = path.resolve(localRoot, "localLargeFile");
 
 describe("largefile handle test", async function() {
-  this.timeout(0);
+  this.timeout(0);//eslint-disable-line no-invalid-this
   //global variables
   let arssh; //testee
   let ssh; //house keeping
