@@ -1,7 +1,7 @@
 {
   "root": true,
   "extends": [
-    "eslint"
+    "eslint:recommended"
   ],
   "plugins": [
     "node",
@@ -92,6 +92,7 @@
     "jsdoc/check-types": "error",
     "jsdoc/newline-after-description": ["error", "never"],
     "jsdoc/no-undefined-types": "error",
+    "jsdoc/require-jsdoc": "off",
     "jsdoc/require-description": "off",
     "jsdoc/require-description-complete-sentence": "warn",
     "jsdoc/require-example": "off",
