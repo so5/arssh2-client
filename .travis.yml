@@ -1,51 +1,30 @@
 language: node_js
-git:
-  quiet: true
-  
+node_js:
+- '8'
+- '10'
+- '12'
+- stable
+- lts
+- lts/*
+os:
+- linux
+- osx
+- windows
 env:
   global:
     - ARSSH_TEST_KEYFILE=~/.ssh/id_rsa_for_test
-    
 before_script:
   - ssh-keygen -P "" -f ~/.ssh/id_rsa_for_test
   - cat  ~/.ssh/id_rsa_for_test.pub >> ~/.ssh/authorized_keys
   - ls -l ~/.ssh/
   - ssh localhost -oStrictHostKeyChecking=no -i ~/.ssh/id_rsa_for_test date
 
-script: npm run test
-
 after_success: npm run coverage
-
 jobs:
   allow_failures:
     - os: osx
     - os: windows
-    
   include:
-  - stage: platform dependency
-    - os: windows
-      node_js: lts
-      install: 
-      - Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
-      - Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
-      - Start-Service sshd
-      - Set-Service -Name sshd -StartupType 'Automatic'
-      - Get-NetFirewallRule -Name *ssh*
-      - New-NetFirewallRule -Name sshd -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22
-    - os: linux
-      node_js: lts/*
-    - os: osx
-      node_js: lts/*
-    
-  - stage: backward compatibility
-    - os: linux
-      node_js:
-      - '8'
-      - '10'
-      - stable
-      - lts
-      - lts/*
-
   - stage: npm publish
     node_js: lts/*
     os: linux
@@ -59,6 +38,29 @@ jobs:
         secure: jGUjTLVv9oNAmoWN8SKHkCIRXAb6lr5iZepKWKyDMOV4pM08qFNGYg7ZKjvcjy0Vuu0b9t/jRr0U0mfeM0MPTQbuExIn6kzJmO4UJKcwYJEcv9vZ3x3xlimxLJx5KBy3fssW/cIuFQnIwgPTULPmFqE1uS4UAr6jbyNwnbr7reIIkgRoOPq9/Vjlm6/PayjqVTextv0MjJ1YMteR7UdcAAu+X2AcEyoCSOF2mS8MuGCY48EYJ9SSmgm50dfzstNuRomyNptR2Xrc4w7jOaR8tDwe/eJiihz/cQwt7IgGOKA1htXQ+NZvj4e44QcREarViUkQYSyIWfRBkUZ9uyWeZKgpXERSEepZ8FXasM2oh4Nr+NvYvST4T2jZQOA3zlIwBCrqXKRFZlpTLvsud7UfuqioJwa6psBWC42vUemsbOLCL2v7UKo9KGv/8hvIfk8eplTZM2nOkg0Wvv3BhrqZFIle8a8gxIfVfV7D8ZjMewP31/iYD4AOsbBJHmN4vTkxanv00S1Pp9G7lVOeQZWbMWuUz2UExJ3B7Mp8nVbdFBNnOodI1CpRJS52w2ae4h4uohDx6WUcN2JFoLqX2ZHRBU3M/HKSyDCe33rl66cdv58nNxlNuc1vo+ieXw9SJCd3QTfz2mkKfp0q3Y/Zx7I54kqDRNldMhUChHuzb+urjbc=
       on:
         tags: true
+  exclude:
+  - os: windows
+    node_js: '8'
+  - os: windows
+    node_js: '10'
+  - os: windows
+    node_js: '12'
+  - os: windows
+    node_js: stable
+  - os: windows
+    node_js: lts/*
+  - os: linux
+    node_js: lts
+  - os: osx
+    node_js: '8' 
+  - os: osx
+    node_js: '10' 
+  - os: osx
+    node_js: '12' 
+  - os: osx
+    node_js: stable
+  - os: osx
+    node_js: lts
 notifications:
   email: false
   slack:
