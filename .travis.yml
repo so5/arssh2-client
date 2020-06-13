@@ -28,8 +28,6 @@ jobs:
     - os: linux
       node_js: lts/*
     - os: linux
-      node_js: '8'
-    - os: linux
       node_js: '10'
     - os: linux
       node_js: stable
