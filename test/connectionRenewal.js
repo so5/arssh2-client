@@ -77,7 +77,6 @@ describe("connection renewal functionality", function() {
   });
   describe("#exec", ()=>{
     it("should reconnect 2 times while executing 1sec command 12 times", async()=>{
-      arssh.verbose = true;
       const stdout = [];
       let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
       expect(rt).to.equal(0);
@@ -97,23 +96,23 @@ describe("connection renewal functionality", function() {
       expect(rt).to.have.lengthOf(11);
 
       //please note stdout is rotated before adding new output if its length is more than 5
-      //so, exec called total 12 times but stdout keep only last 6 results
+      //so, exec called total 12 times but stdout has last 6 outputs
       expect(stdout).to.have.members(["hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n", "hoge\n"]);
       expect(ssherr).not.to.be.called;
-      expect(arssh.numReconnect).to.equal(2);
+      expect(arssh.numReconnect).to.equal(4);
     });
   });
   describe("with file operation", ()=>{
     describe("#send", ()=>{
       it("should reconnect before sending file", async()=>{
         const stdout = [];
-        let rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
+        const rt = await arssh.exec(`sleep 4 && echo ${testText}`, {}, stdout, ssherr);
         expect(rt).to.equal(0);
 
         //after reconnect!!
         await arssh.send(localFiles[1], remoteEmptyDir);
-        rt = await ssh.ls(remoteEmptyDir);
-        expect(rt.map((e)=>{
+        const rt2 = await ssh.ls(remoteEmptyDir);
+        expect(rt2.map((e)=>{
           return path.posix.basename(e);
         })).to.have.members(["bar"]);
         expect(arssh.numReconnect).to.equal(1);
@@ -122,15 +121,12 @@ describe("connection renewal functionality", function() {
     describe("#recv", ()=>{
       it("should reconnect before recieving file", async()=>{
         const stdout = [];
-        const rt = await arssh.exec(`sleep 1 && echo ${testText}`, {}, stdout, ssherr);
+        const rt = await arssh.exec(`sleep 4 && echo ${testText}`, {}, stdout, ssherr);
         expect(rt).to.equal(0);
 
         //after reconnect!!
         await arssh.recv(remoteFiles[4], localEmptyDir);
-        expect(localEmptyDir)
-          .to.be.a.directory()
-          .with.files(["puyo"]);
-
+        expect(localEmptyDir).to.be.a.directory().with.files(["puyo"]);
         expect(arssh.numReconnect).to.equal(1);
       });
     });

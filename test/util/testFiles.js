@@ -2,8 +2,24 @@
 const fs = require("fs");
 const path = require("path");
 const { promisify } = require("util");
-
 const del = require("del");
+
+/*
+ * test directory tree
+ * ${ROOT}
+ * +-- huga/ (empty directory)
+ * +-- foo
+ * +-- bar
+ * +-- baz
+ * +-- hoge
+ *     +-- piyo
+ *     +-- puyo
+ *     +-- poyo
+ *
+ * ${ROOT} is "ARssh_testLocalDir" on local side
+ * it is ARssh_testLocalDir on remote side
+ *
+ */
 
 const localRoot = "ARssh_testLocalDir";
 const localEmptyDir = path.join(localRoot, "huga");

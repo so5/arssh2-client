@@ -15,7 +15,7 @@ jobs:
   include:
     - os: windows
       node_js: lts
-      install:
+      before_script:
       - powershell -Command Get-WindowsCapability -Online | ? Name -like 'OpenSSH*'
       - powershell -Command Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0
       - powershell -Command Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0

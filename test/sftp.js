@@ -15,23 +15,6 @@ chai.use(require("chai-as-promised"));
 //testee
 const ARsshClient = require("../lib/index.js");
 
-/*
- * test directory tree
- * ${ROOT}
- * +-- huga/ (empty directory)
- * +-- foo
- * +-- bar
- * +-- baz
- * +-- hoge
- *     +-- piyo
- *     +-- puyo
- *     +-- poyo
- *
- * ${ROOT} is "ARssh_testLocalDir" on local side
- * it is ARssh_testLocalDir on remote side
- *
- */
-
 //helper
 const {
   nonExisting,
@@ -186,13 +169,8 @@ describe("test for sftp subcommands", function() {
     it("should rejected if target path is existing file", async()=>{
       return expect(arssh.mkdir_p(remoteFiles[0])).to.be.rejectedWith(Error, /attempt to create directory on existing path/u);
     });
-    it("should reject if making child dir of not-owned directory", async()=>{
-      try {
-        await arssh.mkdir_p("/root/hoge");
-        expect.fail();
-      } catch (e) {
-        expect(e.message).to.equal("Permission denied");
-      }
+    it("should reject if making child dir of not-owned directory", ()=>{
+      return expect(arssh.mkdir_p("/root/hoge")).to.be.rejectedWith("Failure");
     });
   });
   describe("#send", async()=>{
@@ -556,23 +534,11 @@ describe("test for sftp subcommands", function() {
       });
     });
     describe("error case", ()=>{
-      it("should not send directory to existing file path", async()=>{
-        try {
-          await arssh.recv(remoteRoot, localFiles[0]);
-          expect.fail();
-        } catch (e) {
-          expect(e).to.be.an("error");
-          expect(e.message).to.equal("destination path must not be existing file");
-        }
+      it("should not send directory to existing file path", ()=>{
+        return expect(arssh.recv(remoteRoot, localFiles[0])).to.be.rejectedWith("destination path must not be existing file");
       });
-      it("should reject if src file does not exist", async()=>{
-        try {
-          await arssh.recv(nonExisting, localEmptyDir);
-          expect.fail();
-        } catch (e) {
-          expect(e).to.be.an("error");
-          expect(e.message).to.equal("src must be existing file or directory");
-        }
+      it("should reject if src file does not exist", ()=>{
+        return expect(arssh.recv(nonExisting, localEmptyDir)).to.be.rejectedWith("src must be existing file or directory");
       });
     });
   });
