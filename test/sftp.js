@@ -170,7 +170,7 @@ describe("test for sftp subcommands", function() {
       return expect(arssh.mkdir_p(remoteFiles[0])).to.be.rejectedWith(Error, /attempt to create directory on existing path/u);
     });
     it("should reject if making child dir of not-owned directory", ()=>{
-      return expect(arssh.mkdir_p("/root/hoge")).to.be.rejectedWith("Failure");
+      return expect(arssh.mkdir_p("/root/hoge"), "on macOS just get 'Failure' for this test").to.be.rejectedWith("Permission denied");
     });
   });
   describe("#send", async()=>{
