@@ -1,4 +1,5 @@
 "use strict";
+/*eslint no-undefined: 0 */
 const path = require("path");
 
 //setup test framework
@@ -11,23 +12,6 @@ chai.use(require("chai-things"));
 const sinon = require("sinon");
 
 const ARsshClient = require("../lib/index.js");
-
-/*
- * test directory tree
- * ${ROOT}
- * +-- huga/ (empty directory)
- * +-- foo
- * +-- bar
- * +-- baz
- * +-- hoge
- *     +-- piyo
- *     +-- puyo
- *     +-- poyo
- *
- * ${ROOT} is "ARssh_testLocalDir" on local side
- * it is ARssh_testLocalDir on remote side
- *
- */
 
 const {
   clearLocalTestFiles,
@@ -215,10 +199,11 @@ describe.skip("ARsshClient stress test", function() {
       })).to.have.members(expectedFiles);
       expect(remoteExistingDirs).to.have.lengthOf(numExecSmall);
 
+      //eslint-disable-next-line guard-for-in
       for (const e in remoteExistingDirs) {
-        const rt = await arssh.ls(path.posix.join(remoteEmptyDir, e, localRoot));
-        expect(rt.map((e)=>{
-          return path.posix.basename(e);
+        const lsResults = await arssh.ls(path.posix.join(remoteEmptyDir, e, localRoot));
+        expect(lsResults.map((e2)=>{
+          return path.posix.basename(e2);
         })).to.have.members(["hoge", "foo", "bar", "baz"]);
       }
     });
@@ -247,7 +232,7 @@ describe.skip("ARsshClient stress test", function() {
       const expectedResults = [];
 
       for (let i = 0; i < numExecSmall; i++) {
-        expectedResults.push(`${testText} ${i}` + "\n");
+        expectedResults.push(`${testText} ${i}\n`);
       }
       expect(results).to.have.members(expectedResults);
 
