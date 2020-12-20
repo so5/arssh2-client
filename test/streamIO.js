@@ -1,5 +1,4 @@
 "use strict";
-const fs = require("fs-extra");
 const path = require("path");
 
 process.on("unhandledRejection", console.dir); //eslint-disable-line no-console
@@ -21,18 +20,13 @@ const {
   clearLocalTestFiles,
   clearRemoteTestFiles,
   createLocalFiles,
-  localRoot,
-  localEmptyDir,
-  localFiles,
   createRemoteFiles,
-  remoteRoot,
-  remoteEmptyDir,
-  remoteFiles
+  remoteRoot
 } = require("./util/testFiles");
 
 const getConfig = require("./util/config");
 
-describe.only("test for stremIO", function() {
+describe("test for stremIO", function() {
   this.timeout(10000);//eslint-disable-line no-invalid-this
   //global variables
   let arssh; //testee
@@ -65,18 +59,80 @@ describe.only("test for stremIO", function() {
       ]);
     });
     it("should be rejected while attempting to create read stream of not existing remote file", ()=>{
-      return expect(arssh.createReadStream(nonExisting)).to.be.rejected;
+      return expect(arssh.createReadStream(path.posix.join(remoteRoot, nonExisting))).to.be.rejected;
     });
     it("should be rejected while attempting to create stream on existing remote directory", ()=>{
       return expect(arssh.createReadStream(path.posix.join(remoteRoot, "hoge"))).to.be.rejected;
     });
   });
-  describe.skip("#writeReadStream", ()=>{
-    it("should get writable strem of existing file to append", async()=>{});
-    it("should get writable strem of existing file to replace", async()=>{});
-    it("should get writable strem of non-existing file", async()=>{});
+  describe("#createWriteStream", ()=>{
+    it("should get writable strem of existing file to append", async()=>{
+      const target = path.posix.join(remoteRoot, "foo");
+      const stream = await arssh.createWriteStream(target, { flags: "a" });
+      stream.write("hoge");
+      stream.end();
+
+      //check write result
+      const rstream = await arssh.createReadStream(target);
+      const data = await expect(rstream).to.emit("data");
+      expect(data[0].toString()).to.equal(`${target}\nhoge`);
+
+      return expect(stream).not.to.emit("error");
+    });
+    it("should get writable strem of existing file to replace", async()=>{
+      const target = path.posix.join(remoteRoot, "foo");
+      const stream = await arssh.createWriteStream(target);
+      stream.write("hoge");
+      stream.end();
+
+      //check write result
+      const rstream = await arssh.createReadStream(target);
+      const data = await expect(rstream).to.emit("data");
+      expect(data[0].toString()).to.equal("hoge");
+      return expect(stream).not.to.emit("error");
+    });
+    it("should get writable strem of non-existing file", async()=>{
+      const target = path.posix.join(remoteRoot, nonExisting);
+      const stream = await arssh.createWriteStream(target);
+      stream.write("hoge");
+      stream.end();
+
+      //check write result
+      const rstream = await arssh.createReadStream(target);
+      const data = await expect(rstream).to.emit("data");
+      expect(data[0].toString()).to.equal("hoge");
+      return expect(stream).not.to.emit("error");
+    });
     it("should be rejected while attempting to create stream on existing remote directory", ()=>{
       return expect(arssh.createReadStream(path.posix.join(remoteRoot, "hoge"))).to.be.rejected;
+    });
+  });
+  describe("#pipe read and write stream", ()=>{
+    it("should overwrite existing file", async()=>{
+      const target = path.posix.join(remoteRoot, "foo");
+      const stream = await arssh.createWriteStream(target);
+      const rtarget = path.posix.join(remoteRoot, "bar");
+      const rstream = await arssh.createReadStream(rtarget);
+      rstream.pipe(stream);
+
+      //check write result
+      const rstream2 = await arssh.createReadStream(target);
+      const data = await expect(rstream2).to.emit("data");
+      expect(data[0].toString()).to.equal(`${rtarget}\n`);
+      return expect(stream).not.to.emit("error");
+    });
+    it("should append existing file", async()=>{
+      const target = path.posix.join(remoteRoot, "foo");
+      const stream = await arssh.createWriteStream(target, { flags: "a" });
+      const rtarget = path.posix.join(remoteRoot, "bar");
+      const rstream = await arssh.createReadStream(rtarget);
+      rstream.pipe(stream);
+
+      //check write result
+      const rstream2 = await arssh.createReadStream(target);
+      const data = await expect(rstream2).to.emit("data");
+      expect(data[0].toString()).to.equal(`${target}\n${rtarget}\n`);
+      return expect(stream).not.to.emit("error");
     });
   });
 });
