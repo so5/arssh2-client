@@ -20,7 +20,7 @@
     "postversion": "git push origin $(git describe --abbrev=0 --tags)"
   },
   "dependencies": {
-    "debug": "^4.3.2",
+    "debug": "^4.3.3",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
     "minimatch": "^3.0.4",
