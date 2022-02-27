@@ -23,7 +23,7 @@
     "debug": "^4.3.2",
     "fs-extra": "^8.1.0",
     "glob": "^7.1.6",
-    "minimatch": "^3.0.4",
+    "minimatch": "^3.0.5",
     "promise-retry": "^1.1.1",
     "simple-batch-system": "^1.14.0",
     "ssh2": "^0.8.7"
