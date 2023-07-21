@@ -1,9 +1,16 @@
-[![npm version](https://badge.fury.io/js/arssh2-client.svg)](https://badge.fury.io/js/arssh2-client)
-[![Build Status](https://travis-ci.com/so5/arssh2-client.svg?branch=master)](https://travis-ci.com/so5/arssh2-client)
-[![Coverage Status](https://coveralls.io/repos/github/so5/arssh2-client/badge.svg?branch=master)](https://coveralls.io/github/so5/arssh2-client?branch=master)
-[![Maintainability](https://api.codeclimate.com/v1/badges/fa854220ce9d6b122add/maintainability)](https://codeclimate.com/github/so5/arssh2-client/maintainability)
-[![Inline docs](http://inch-ci.org/github/so5/arssh2-client.svg?branch=master)](http://inch-ci.org/github/so5/arssh2-client)
-[![Greenkeeper badge](https://badges.greenkeeper.io/so5/arssh2-client.svg)](https://greenkeeper.io/)
+# DEPRECATED
+This library is no longer supported.
+
+I made a brand-new library called ssh-client-wrapper. It uses underlying openssh and rsync command instead of mscdex/ssh2.
+So, it's file transfer performance is greately improved. and you can use ssh-agenat, ssh_config, agent-forward without effort.
+
+If you are interested please take a look
+
+https://github.com/so5/ssh-client-wrapper
+
+https://www.npmjs.com/package/ssh-client-wrapper
+
+
 
 
 # README #
